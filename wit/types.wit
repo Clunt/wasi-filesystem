@@ -1,28 +1,24 @@
 package wasi:filesystem@0.2.0;
-/// WASI filesystem is a filesystem API primarily intended to let users run WASI
-/// programs that access their files on their existing filesystems, without
-/// significant overhead.
+/// WASI filesystem主要是文件系统API，
+/// 旨在让用户在其现有文件系统上，运行访问其文件的WASI程序，
+/// 而不会产生大量的额外开销。
 ///
-/// It is intended to be roughly portable between Unix-family platforms and
-/// Windows, though it does not hide many of the major differences.
+/// 它旨在在Unix系列平台和Windows之间大致可移植，尽管它并未隐藏许多主要差异。
 ///
-/// Paths are passed as interface-type `string`s, meaning they must consist of
-/// a sequence of Unicode Scalar Values (USVs). Some filesystems may contain
-/// paths which are not accessible by this API.
+/// 路径作为接口类型`string`传递，
+/// 意味着它们必须由一系列Unicode标量值（Unicode Scalar Values, USVs）组成。
+/// 有些文件系统可能包含此API无法访问的路径。
 ///
-/// The directory separator in WASI is always the forward-slash (`/`).
+/// WASI中的目录分隔符总是正斜杠（`/`）。
 ///
-/// All paths in WASI are relative paths, and are interpreted relative to a
-/// `descriptor` referring to a base directory. If a `path` argument to any WASI
-/// function starts with `/`, or if any step of resolving a `path`, including
-/// `..` and symbolic link steps, reaches a directory outside of the base
-/// directory, or reaches a symlink to an absolute or rooted path in the
-/// underlying filesystem, the function fails with `error-code::not-permitted`.
+/// WASI中的所有路径都是相对路径，并且相对于引用基目录的`descriptor`进行解释。
+/// 如果WASI函数的`path`参数以`/`开头，或者解析`path`的任意步骤中，
+/// 包括`..`和符号连接阶段到达基目录外的目录，或到达底层文件系统中绝对路径或根路径的符号连接，
+/// 该函数将以`error-code::not-permitted`失败。
 ///
-/// For more information about WASI path resolution and sandboxing, see
-/// [WASI filesystem path resolution].
+/// 关于WASI路径解析和沙盒化的更多信息，请参阅[WASI文件系统路径解析][WASI filesystem path resolution].
 ///
-/// [WASI filesystem path resolution]: https://github.com/WebAssembly/wasi-filesystem/blob/main/path-resolution.md
+/// [WASI filesystem path resolution]: https://github.com/Clunt/wasi-filesystem/blob/main/path-resolution.md
 @since(version = 0.2.0)
 interface types {
     @since(version = 0.2.0)
@@ -30,339 +26,306 @@ interface types {
     @since(version = 0.2.0)
     use wasi:clocks/wall-clock@0.2.0.{datetime};
 
-    /// File size or length of a region within a file.
+    /// 文件大小或文件内区域的长度。
     @since(version = 0.2.0)
     type filesize = u64;
 
-    /// The type of a filesystem object referenced by a descriptor.
+    /// descriptor(描述符)引用的文件系统对象的类型。
     ///
-    /// Note: This was called `filetype` in earlier versions of WASI.
+    /// 注意：在WASI的早期版本中，这被称为`filetype`。
     @since(version = 0.2.0)
     enum descriptor-type {
-        /// The type of the descriptor or file is unknown or is different from
-        /// any of the other types specified.
+        /// descriptor(描述符)或file(文件)的类型未知或与指定的任何其他类型不同。
         unknown,
-        /// The descriptor refers to a block device inode.
+        /// 描述符引用一个块设备索引节点(a block device inode)
         block-device,
-        /// The descriptor refers to a character device inode.
+        /// 描述符引用一个字节设备索引节点(a character device inode)。
         character-device,
-        /// The descriptor refers to a directory inode.
+        /// 描述符引用一个目录索引节点(a directory inode)。
         directory,
-        /// The descriptor refers to a named pipe.
+        /// 描述符引用一个命名管道(a named pipe)。
         fifo,
-        /// The file refers to a symbolic link inode.
+        /// 描述符引用一个符号连接索引节点(a symbolic link inode)。
         symbolic-link,
-        /// The descriptor refers to a regular file inode.
+        /// 描述符引用一个常规文件索引节点(a regular file inode)。
         regular-file,
-        /// The descriptor refers to a socket.
+        /// 描述符引用一个套接字(a socket)。
         socket,
     }
 
-    /// Descriptor flags.
+    /// 描述符标志。
     ///
-    /// Note: This was called `fdflags` in earlier versions of WASI.
+    /// 注意：在WASI的早期版本中，这被称为`fdflags`。
     @since(version = 0.2.0)
     flags descriptor-flags {
-        /// Read mode: Data can be read.
+        /// 读模式：数据可读。
         read,
-        /// Write mode: Data can be written to.
+        /// 写模式：数据可写。
         write,
-        /// Request that writes be performed according to synchronized I/O file
-        /// integrity completion. The data stored in the file and the file's
-        /// metadata are synchronized. This is similar to `O_SYNC` in POSIX.
+        /// 请求(request)根据同步I/O文件完整性完成来执行写操作。
+        /// 存储在文件和文件元数据(metadata)中的数据会被同步。
+        /// 这类似于POSIX中`O_SYNC`。
         ///
-        /// The precise semantics of this operation have not yet been defined for
-        /// WASI. At this time, it should be interpreted as a request, and not a
-        /// requirement.
-        file-integrity-sync,
-        /// Request that writes be performed according to synchronized I/O data
-        /// integrity completion. Only the data stored in the file is
-        /// synchronized. This is similar to `O_DSYNC` in POSIX.
+        /// WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+        /// file-integrity-sync，请求(request)根据同步I/O数据完整性完成来执行写操作。
+        /// 只有存储在文件中的数据被同步，这类似于POSIX中`O_DSYNC`。
         ///
-        /// The precise semantics of this operation have not yet been defined for
-        /// WASI. At this time, it should be interpreted as a request, and not a
-        /// requirement.
-        data-integrity-sync,
-        /// Requests that reads be performed at the same level of integrety
-        /// requested for writes. This is similar to `O_RSYNC` in POSIX.
+        /// WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+        /// data-integrity-sync，请求(request)以写操作同级别的完整性来执行读操作。
+        /// 这类似于POSIX中`O_RSYNC`。
         ///
-        /// The precise semantics of this operation have not yet been defined for
-        /// WASI. At this time, it should be interpreted as a request, and not a
-        /// requirement.
-        requested-write-sync,
-        /// Mutating directories mode: Directory contents may be mutated.
+        /// WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+        /// requested-write-sync，更改目录模式(Mutating directories mode)：目录内容可能会发生变化。
         ///
-        /// When this flag is unset on a descriptor, operations using the
-        /// descriptor which would create, rename, delete, modify the data or
-        /// metadata of filesystem objects, or obtain another handle which
-        /// would permit any of those, shall fail with `error-code::read-only` if
-        /// they would otherwise succeed.
+        /// 当这个标志在描述符上未设置时，
+        /// 使用描述符的操作将创建、重命名、删除、修改文件系统对象的数据或元数据，或获取允许这些操作的另一个句柄，
+        /// 如果它们本来会成功的话，则将以`error-code::read-only`失败。
         ///
-        /// This may only be set on directories.
+        /// 这只能在目录上设置。
         mutate-directory,
     }
 
-    /// File attributes.
+    /// 文件属性(File attributes)。
     ///
-    /// Note: This was called `filestat` in earlier versions of WASI.
+    /// 注意：在WASI的早期版本中，这被称为`filestat`。
     @since(version = 0.2.0)
     record descriptor-stat {
-        /// File type.
+        /// 文件类型(File type)。
         %type: descriptor-type,
-        /// Number of hard links to the file.
+        /// 文件硬链接数量(Number of hard links to the file)。
         link-count: link-count,
-        /// For regular files, the file size in bytes. For symbolic links, the
-        /// length in bytes of the pathname contained in the symbolic link.
+        /// 对于普通文件，指的是以字节为单位的文件大小。
+        /// 对于符号链接，指的是符号链接中包含的路径名(pathname)的字节长度。
         size: filesize,
-        /// Last data access timestamp.
+        /// 最后一次数据访问时间戳。
         ///
-        /// If the `option` is none, the platform doesn't maintain an access
-        /// timestamp for this file.
+        /// 如果`option`为none，则平台不维护该文件的访问时间戳。
         data-access-timestamp: option<datetime>,
-        /// Last data modification timestamp.
+        /// 最后一次数据修改时间戳。
         ///
-        /// If the `option` is none, the platform doesn't maintain a
-        /// modification timestamp for this file.
+        /// 如果`option`为none，则平台不维护该文件的修改时间戳。
         data-modification-timestamp: option<datetime>,
-        /// Last file status-change timestamp.
+        /// 最后一次文件状态更改时间戳。
         ///
-        /// If the `option` is none, the platform doesn't maintain a
-        /// status-change timestamp for this file.
+        /// 如果`option`为none，则平台不维护该文件的状态更改时间戳。
         status-change-timestamp: option<datetime>,
     }
 
-    /// Flags determining the method of how paths are resolved.
+    /// 确定路径解析方法的标志。
     @since(version = 0.2.0)
     flags path-flags {
-        /// As long as the resolved path corresponds to a symbolic link, it is
-        /// expanded.
+        /// 只要解析的路径对应符号链接，它就被展开。
         symlink-follow,
     }
 
-    /// Open flags used by `open-at`.
+    /// 用于`open-at`的打开标志。
     @since(version = 0.2.0)
     flags open-flags {
-        /// Create file if it does not exist, similar to `O_CREAT` in POSIX.
+        /// 如果文件不存在则创建，类似于POSIX中的`O_CREAT`。
         create,
-        /// Fail if not a directory, similar to `O_DIRECTORY` in POSIX.
+        /// 如果不是目录则失败，类似于POSIX中的`O_DIRECTORY`。
         directory,
-        /// Fail if file already exists, similar to `O_EXCL` in POSIX.
+        /// 如果文件已存在则失败，类似于POSIX中的`O_EXCL`。
         exclusive,
-        /// Truncate file to size 0, similar to `O_TRUNC` in POSIX.
+        /// 文件尺寸截断为0，类似于POSIX中的`O_TRUNC`。
         truncate,
     }
 
-    /// Number of hard links to an inode.
+    /// 指向索引节点(inode)的硬链接(hard links)数量。
     @since(version = 0.2.0)
     type link-count = u64;
 
-    /// When setting a timestamp, this gives the value to set it to.
+    /// 当设置时间戳时，它表示要设置的值。
     @since(version = 0.2.0)
     variant new-timestamp {
-        /// Leave the timestamp set to its previous value.
+        /// 将时间戳设置为之前的值。
         no-change,
-        /// Set the timestamp to the current time of the system clock associated
-        /// with the filesystem.
+        /// 将时间戳设置为与文件系统关联的系统时钟的当前时间。
         now,
-        /// Set the timestamp to the given value.
+        /// 将时间戳设置为给定值。
         timestamp(datetime),
     }
 
-    /// A directory entry.
+    /// 目录项。
     record directory-entry {
-        /// The type of the file referred to by this directory entry.
+        /// 该目录项引用的文件类型。
         %type: descriptor-type,
 
-        /// The name of the object.
+        /// 对象名称。
         name: string,
     }
 
-    /// Error codes returned by functions, similar to `errno` in POSIX.
-    /// Not all of these error codes are returned by the functions provided by this
-    /// API; some are used in higher-level library layers, and others are provided
-    /// merely for alignment with POSIX.
+    /// 函数返回的错误码，类似于POSIX中的`errno`。
+    /// 并非所有这些错误码都由此API提供的函数返回；
+    /// 其中一些用于更高级库层，而其他一些仅用于与POSIX对齐。
     enum error-code {
-        /// Permission denied, similar to `EACCES` in POSIX.
+        /// 权限被拒绝，类似于POSIX中的`EACCES`。
         access,
-        /// Resource unavailable, or operation would block, similar to `EAGAIN` and `EWOULDBLOCK` in POSIX.
+        /// 资源不可用，或操作将阻塞，类似于POSIX中的`EAGAIN`和`EWOULDBLOCK`。
         would-block,
-        /// Connection already in progress, similar to `EALREADY` in POSIX.
+        /// 连接已在进行中，类似于POSIX中的`EALREADY`。
         already,
-        /// Bad descriptor, similar to `EBADF` in POSIX.
+        /// 错误的描述符，类似于POSIX中的`EBADF`。
         bad-descriptor,
-        /// Device or resource busy, similar to `EBUSY` in POSIX.
+        /// 设备或资源繁忙，类似于POSIX中的`EBUSY`。
         busy,
-        /// Resource deadlock would occur, similar to `EDEADLK` in POSIX.
+        /// 资源死锁将发生，类似于POSIX中的`EDEADLK`。
         deadlock,
-        /// Storage quota exceeded, similar to `EDQUOT` in POSIX.
+        /// 超出存储配额，类似于POSIX中的`EDQUOT`。
         quota,
-        /// File exists, similar to `EEXIST` in POSIX.
+        /// 文件存在，类似于POSIX中的`EEXIST`。
         exist,
-        /// File too large, similar to `EFBIG` in POSIX.
+        /// 文件过大，类似于POSIX中的`EFBIG`。
         file-too-large,
-        /// Illegal byte sequence, similar to `EILSEQ` in POSIX.
+        /// 非法字符序列，类似于POSIX中的`EILSEQ`。
         illegal-byte-sequence,
-        /// Operation in progress, similar to `EINPROGRESS` in POSIX.
+        /// 进行中的操作，类似于POSIX中的`EINPROGRESS`。
         in-progress,
-        /// Interrupted function, similar to `EINTR` in POSIX.
+        /// 中断函数，类似于POSIX中的`EINTR`。
         interrupted,
-        /// Invalid argument, similar to `EINVAL` in POSIX.
+        /// 无效参数，类似于POSIX中的`EINVAL`。
         invalid,
-        /// I/O error, similar to `EIO` in POSIX.
+        /// I/O错误，类似于POSIX中的`EIO`。
         io,
-        /// Is a directory, similar to `EISDIR` in POSIX.
+        /// 是一个目录，类似于POSIX中的`EISDIR`。
         is-directory,
-        /// Too many levels of symbolic links, similar to `ELOOP` in POSIX.
+        /// 符号链接层级过多，类似于POSIX中的`ELOOP`。
         loop,
-        /// Too many links, similar to `EMLINK` in POSIX.
+        /// 链接过多，类似于POSIX中的`EMLINK`。
         too-many-links,
-        /// Message too large, similar to `EMSGSIZE` in POSIX.
+        /// 消息过大，类似于POSIX中的`EMSGSIZE`。
         message-size,
-        /// Filename too long, similar to `ENAMETOOLONG` in POSIX.
+        /// 文件名过长，类似于POSIX中的`ENAMETOOLONG`。
         name-too-long,
-        /// No such device, similar to `ENODEV` in POSIX.
+        /// 无此设备，类似于POSIX中的`ENODEV`。
         no-device,
-        /// No such file or directory, similar to `ENOENT` in POSIX.
+        /// 无此文件或目录，类似于POSIX中的`ENOENT`。
         no-entry,
-        /// No locks available, similar to `ENOLCK` in POSIX.
+        /// 无可用锁，类似于POSIX中的`ENOLCK`。
         no-lock,
-        /// Not enough space, similar to `ENOMEM` in POSIX.
+        /// 空间不足，类似于POSIX中的`ENOMEM`。
         insufficient-memory,
-        /// No space left on device, similar to `ENOSPC` in POSIX.
+        /// 设备上无剩余空间，类似于POSIX中的`ENOSPC`。
         insufficient-space,
-        /// Not a directory or a symbolic link to a directory, similar to `ENOTDIR` in POSIX.
+        /// 不是目录或指向目录的符号链接，类似于POSIX中的`ENOTDIR`。
         not-directory,
-        /// Directory not empty, similar to `ENOTEMPTY` in POSIX.
+        /// 目录非空，类似于POSIX中的`ENOTEMPTY`。
         not-empty,
-        /// State not recoverable, similar to `ENOTRECOVERABLE` in POSIX.
+        /// 状态无法恢复，类似于POSIX中的`ENOTRECOVERABLE`。
         not-recoverable,
-        /// Not supported, similar to `ENOTSUP` and `ENOSYS` in POSIX.
+        /// 不支持，类似于POSIX中的`ENOTSUP`和`ENOSYS`。
         unsupported,
-        /// Inappropriate I/O control operation, similar to `ENOTTY` in POSIX.
+        /// 不适当的I/O控制操作，类似于POSIX中的`ENOTTY`。
         no-tty,
-        /// No such device or address, similar to `ENXIO` in POSIX.
+        /// 无此设备或地址，类似于POSIX中的`ENXIO`。
         no-such-device,
-        /// Value too large to be stored in data type, similar to `EOVERFLOW` in POSIX.
+        /// 值过大无法存储在数据类型中，类似于POSIX中的`EOVERFLOW`。
         overflow,
-        /// Operation not permitted, similar to `EPERM` in POSIX.
+        /// 操作不允许，类似于POSIX中的`EPERM`。
         not-permitted,
-        /// Broken pipe, similar to `EPIPE` in POSIX.
+        /// 管道中断，类似于POSIX中的`EPIPE`。
         pipe,
-        /// Read-only file system, similar to `EROFS` in POSIX.
+        /// 只读文件系统，类似于POSIX中的`EROFS`。
         read-only,
-        /// Invalid seek, similar to `ESPIPE` in POSIX.
+        /// 无效查找，类似于POSIX中的`ESPIPE`。
         invalid-seek,
-        /// Text file busy, similar to `ETXTBSY` in POSIX.
+        /// 文本文件繁忙，类似于POSIX中的`ETXTBSY`。
         text-file-busy,
-        /// Cross-device link, similar to `EXDEV` in POSIX.
+        /// 跨设备链接，类似于POSIX中的`EXDEV`。
         cross-device,
     }
 
-    /// File or memory access pattern advisory information.
+    /// 文件或内存访问模式的建议信息。
     @since(version = 0.2.0)
     enum advice {
-        /// The application has no advice to give on its behavior with respect
-        /// to the specified data.
+        /// 应用程序对其与指定数据相关的行为没有建议。
         normal,
-        /// The application expects to access the specified data sequentially
-        /// from lower offsets to higher offsets.
+        /// 应用程序期望以低偏移量到高偏移量顺序访问指定的数据。
         sequential,
-        /// The application expects to access the specified data in a random
-        /// order.
+        /// 应用程序期望以随机顺序访问指定的数据。
         random,
-        /// The application expects to access the specified data in the near
-        /// future.
+        /// 应用程序期望在不久的将来访问指定的数据。
         will-need,
-        /// The application expects that it will not access the specified data
-        /// in the near future.
+        /// 应用程序预计在不久的将来不会访问指定的数据。
         dont-need,
-        /// The application expects to access the specified data once and then
-        /// not reuse it thereafter.
+        /// 应用程序期望访问指定的数据一次，然后不再使用它。
         no-reuse,
     }
 
-    /// A 128-bit hash value, split into parts because wasm doesn't have a
-    /// 128-bit integer type.
+    /// 一个128位的哈希值，因为wasm没有128位的整数类型而被分成几个部分。
     @since(version = 0.2.0)
     record metadata-hash-value {
-       /// 64 bits of a 128-bit hash value.
+       /// 128位哈希值中的64位。
        lower: u64,
-       /// Another 64 bits of a 128-bit hash value.
+       /// 128位哈希值中的另外64位。
        upper: u64,
     }
 
-    /// A descriptor is a reference to a filesystem object, which may be a file,
-    /// directory, named pipe, special file, or other object on which filesystem
-    /// calls may be made.
+    /// 描述符是对文件系统对象的引用，该对象可以是文件、目录、命名管道、特殊文件或可以对其进行文件系统调用的其他对象。
     @since(version = 0.2.0)
     resource descriptor {
-        /// Return a stream for reading from a file, if available.
+        /// 如果可用，返回用于读取文件的流。
         ///
-        /// May fail with an error-code describing why the file cannot be read.
+        /// 可能会以error-code失败，描述为什么无法读取文件。
         ///
-        /// Multiple read, write, and append streams may be active on the same open
-        /// file and they do not interfere with each other.
+        /// 多个读、写和追加流可能活动于同一个打开的文件，并且它们不会相互干扰。
         ///
-        /// Note: This allows using `read-stream`, which is similar to `read` in POSIX.
+        /// 注意：其允许使用`read-stream`，类似于POSIX中的`read`。
         @since(version = 0.2.0)
         read-via-stream: func(
-            /// The offset within the file at which to start reading.
+            /// 开始读取文件的偏移量。
             offset: filesize,
         ) -> result<input-stream, error-code>;
 
-        /// Return a stream for writing to a file, if available.
+        /// 如果可用，返回用于写入文件的流。
         ///
-        /// May fail with an error-code describing why the file cannot be written.
+        /// 可能会以error-code失败，描述为什么无法写入文件。
         ///
-        /// Note: This allows using `write-stream`, which is similar to `write` in
-        /// POSIX.
+        /// 注意：其允许使用`write-stream`，类似于POSIX中的`write`。
         @since(version = 0.2.0)
         write-via-stream: func(
-            /// The offset within the file at which to start writing.
+            /// 开始写入文件的偏移量。
             offset: filesize,
         ) -> result<output-stream, error-code>;
 
-        /// Return a stream for appending to a file, if available.
+        /// 如果可用，返回用于追加文件的流。
         ///
-        /// May fail with an error-code describing why the file cannot be appended.
+        /// 可能会以error-code失败，描述为什么无法追加文件。
         ///
-        /// Note: This allows using `write-stream`, which is similar to `write` with
-        /// `O_APPEND` in in POSIX.
+        /// 注意：其允许使用`write-stream`，类似于POSIX中的`write`。
         @since(version = 0.2.0)
         append-via-stream: func() -> result<output-stream, error-code>;
 
-        /// Provide file advisory information on a descriptor.
+        /// 在描述符上提供文件建议信息。
         ///
-        /// This is similar to `posix_fadvise` in POSIX.
+        /// 类似于POSIX中的`posix_fadvise`。
         @since(version = 0.2.0)
         advise: func(
-            /// The offset within the file to which the advisory applies.
+            /// 建议适用的文件内偏移量。
             offset: filesize,
-            /// The length of the region to which the advisory applies.
+            /// 建议适用的区域(region)的长度。
             length: filesize,
             /// The advice.
             advice: advice
         ) -> result<_, error-code>;
 
-        /// Synchronize the data of a file to disk.
+        /// 同步文件数据至磁盘。
         ///
-        /// This function succeeds with no effect if the file descriptor is not
-        /// opened for writing.
+        /// 如果文件描述符未打开写入，则此函数会成功但没有效果。
         ///
-        /// Note: This is similar to `fdatasync` in POSIX.
+        /// 注意：其类似于POSIX中的`fdatasync`。
         @since(version = 0.2.0)
         sync-data: func() -> result<_, error-code>;
 
-        /// Get flags associated with a descriptor.
+        /// 获取与描述符关联的标志。
         ///
-        /// Note: This returns similar flags to `fcntl(fd, F_GETFL)` in POSIX.
+        /// 注意：其返回的标志类似于POSIX中的`fcntl(fd, F_GETFL)`。
         ///
-        /// Note: This returns the value that was the `fs_flags` value returned
-        /// from `fdstat_get` in earlier versions of WASI.
+        /// 注意：该值在WASI的早期版本中是`fdstat_get`的返回值`fs_flags`。
         @since(version = 0.2.0)
         get-flags: func() -> result<descriptor-flags, error-code>;
 
-        /// Get the dynamic type of a descriptor.
+        /// 获取描述符的动态类型。
         ///
         /// Note: This returns the same value as the `type` field of the `fd-stat`
         /// returned by `stat`, `stat-at` and similar.
