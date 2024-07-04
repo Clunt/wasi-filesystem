@@ -463,23 +463,19 @@ also known as <a href="https://en.wikipedia.org/wiki/Unix_time">Unix Time</a>.</
 <li><a name="resolution.0"></a> <a href="#datetime"><a href="#datetime"><code>datetime</code></a></a></li>
 </ul>
 <h2><a name="wasi_filesystem_types_0_2_0"></a>Import interface wasi:filesystem/types@0.2.0</h2>
-<p>WASI filesystem is a filesystem API primarily intended to let users run WASI
-programs that access their files on their existing filesystems, without
-significant overhead.</p>
-<p>It is intended to be roughly portable between Unix-family platforms and
-Windows, though it does not hide many of the major differences.</p>
-<p>Paths are passed as interface-type <code>string</code>s, meaning they must consist of
-a sequence of Unicode Scalar Values (USVs). Some filesystems may contain
-paths which are not accessible by this API.</p>
-<p>The directory separator in WASI is always the forward-slash (<code>/</code>).</p>
-<p>All paths in WASI are relative paths, and are interpreted relative to a
-<a href="#descriptor"><code>descriptor</code></a> referring to a base directory. If a <code>path</code> argument to any WASI
-function starts with <code>/</code>, or if any step of resolving a <code>path</code>, including
-<code>..</code> and symbolic link steps, reaches a directory outside of the base
-directory, or reaches a symlink to an absolute or rooted path in the
-underlying filesystem, the function fails with <a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>.</p>
-<p>For more information about WASI path resolution and sandboxing, see
-<a href="https://github.com/WebAssembly/wasi-filesystem/blob/main/path-resolution.md">WASI filesystem path resolution</a>.</p>
+<p>WASI filesystem主要是文件系统API，
+旨在让用户在其现有文件系统上，运行访问其文件的WASI程序，
+而不会产生大量的额外开销。</p>
+<p>它旨在在Unix系列平台和Windows之间大致可移植，尽管它并未隐藏许多主要差异。</p>
+<p>路径作为接口类型<code>string</code>传递，
+意味着它们必须由一系列Unicode标量值（Unicode Scalar Values, USVs）组成。
+有些文件系统可能包含此API无法访问的路径。</p>
+<p>WASI中的目录分隔符总是正斜杠（<code>/</code>）。</p>
+<p>WASI中的所有路径都是相对路径，并且相对于引用基目录的<a href="#descriptor"><code>descriptor</code></a>进行解释。
+如果WASI函数的<code>path</code>参数以<code>/</code>开头，或者解析<code>path</code>的任意步骤中，
+包括<code>..</code>和符号连接阶段到达基目录外的目录，或到达底层文件系统中绝对路径或根路径的符号连接，
+该函数将以<a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>失败。</p>
+<p>关于WASI路径解析和沙盒化的更多信息，请参阅<a href="https://github.com/Clunt/wasi-filesystem/blob/main/path-resolution.md">WASI文件系统路径解析</a>.</p>
 <hr />
 <h3>Types</h3>
 <h4><a name="input_stream"></a><code>type input-stream</code></h4>
@@ -496,414 +492,379 @@ underlying filesystem, the function fails with <a href="#error_code.not_permitte
 <p>
 #### <a name="filesize"></a>`type filesize`
 `u64`
-<p>File size or length of a region within a file.
+<p>文件大小或文件内区域的长度。
 <h4><a name="descriptor_type"></a><code>enum descriptor-type</code></h4>
-<p>The type of a filesystem object referenced by a descriptor.</p>
-<p>Note: This was called <code>filetype</code> in earlier versions of WASI.</p>
+<p>descriptor(描述符)引用的文件系统对象的类型。</p>
+<p>注意：在WASI的早期版本中，这被称为<code>filetype</code>。</p>
 <h5>Enum Cases</h5>
 <ul>
 <li>
 <p><a name="descriptor_type.unknown"></a><code>unknown</code></p>
-<p>The type of the descriptor or file is unknown or is different from
-any of the other types specified.
+<p>descriptor(描述符)或file(文件)的类型未知或与指定的任何其他类型不同。
 </li>
 <li>
 <p><a name="descriptor_type.block_device"></a><code>block-device</code></p>
-<p>The descriptor refers to a block device inode.
+<p>描述符引用一个块设备索引节点(a block device inode)
 </li>
 <li>
 <p><a name="descriptor_type.character_device"></a><code>character-device</code></p>
-<p>The descriptor refers to a character device inode.
+<p>描述符引用一个字节设备索引节点(a character device inode)。
 </li>
 <li>
 <p><a name="descriptor_type.directory"></a><code>directory</code></p>
-<p>The descriptor refers to a directory inode.
+<p>描述符引用一个目录索引节点(a directory inode)。
 </li>
 <li>
 <p><a name="descriptor_type.fifo"></a><code>fifo</code></p>
-<p>The descriptor refers to a named pipe.
+<p>描述符引用一个命名管道(a named pipe)。
 </li>
 <li>
 <p><a name="descriptor_type.symbolic_link"></a><code>symbolic-link</code></p>
-<p>The file refers to a symbolic link inode.
+<p>描述符引用一个符号连接索引节点(a symbolic link inode)。
 </li>
 <li>
 <p><a name="descriptor_type.regular_file"></a><code>regular-file</code></p>
-<p>The descriptor refers to a regular file inode.
+<p>描述符引用一个常规文件索引节点(a regular file inode)。
 </li>
 <li>
 <p><a name="descriptor_type.socket"></a><code>socket</code></p>
-<p>The descriptor refers to a socket.
+<p>描述符引用一个套接字(a socket)。
 </li>
 </ul>
 <h4><a name="descriptor_flags"></a><code>flags descriptor-flags</code></h4>
-<p>Descriptor flags.</p>
-<p>Note: This was called <code>fdflags</code> in earlier versions of WASI.</p>
+<p>描述符标志。</p>
+<p>注意：在WASI的早期版本中，这被称为<code>fdflags</code>。</p>
 <h5>Flags members</h5>
 <ul>
 <li>
 <p><a name="descriptor_flags.read"></a><code>read</code>: </p>
-<p>Read mode: Data can be read.
+<p>读模式：数据可读。
 </li>
 <li>
 <p><a name="descriptor_flags.write"></a><code>write</code>: </p>
-<p>Write mode: Data can be written to.
-</li>
-<li>
-<p><a name="descriptor_flags.file_integrity_sync"></a><code>file-integrity-sync</code>: </p>
-<p>Request that writes be performed according to synchronized I/O file
-integrity completion. The data stored in the file and the file's
-metadata are synchronized. This is similar to `O_SYNC` in POSIX.
-<p>The precise semantics of this operation have not yet been defined for
-WASI. At this time, it should be interpreted as a request, and not a
-requirement.</p>
-</li>
-<li>
-<p><a name="descriptor_flags.data_integrity_sync"></a><code>data-integrity-sync</code>: </p>
-<p>Request that writes be performed according to synchronized I/O data
-integrity completion. Only the data stored in the file is
-synchronized. This is similar to `O_DSYNC` in POSIX.
-<p>The precise semantics of this operation have not yet been defined for
-WASI. At this time, it should be interpreted as a request, and not a
-requirement.</p>
-</li>
-<li>
-<p><a name="descriptor_flags.requested_write_sync"></a><code>requested-write-sync</code>: </p>
-<p>Requests that reads be performed at the same level of integrety
-requested for writes. This is similar to `O_RSYNC` in POSIX.
-<p>The precise semantics of this operation have not yet been defined for
-WASI. At this time, it should be interpreted as a request, and not a
-requirement.</p>
+<p>写模式：数据可写。
 </li>
 <li>
 <p><a name="descriptor_flags.mutate_directory"></a><code>mutate-directory</code>: </p>
-<p>Mutating directories mode: Directory contents may be mutated.
-<p>When this flag is unset on a descriptor, operations using the
-descriptor which would create, rename, delete, modify the data or
-metadata of filesystem objects, or obtain another handle which
-would permit any of those, shall fail with <a href="#error_code.read_only"><code>error-code::read-only</code></a> if
-they would otherwise succeed.</p>
-<p>This may only be set on directories.</p>
+<p>请求(request)根据同步I/O文件完整性完成来执行写操作。
+存储在文件和文件元数据(metadata)中的数据会被同步。
+这类似于POSIX中`O_SYNC`。
+<p>WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+file-integrity-sync，请求(request)根据同步I/O数据完整性完成来执行写操作。
+只有存储在文件中的数据被同步，这类似于POSIX中<code>O_DSYNC</code>。</p>
+<p>WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+data-integrity-sync，请求(request)以写操作同级别的完整性来执行读操作。
+这类似于POSIX中<code>O_RSYNC</code>。</p>
+<p>WASI尚未定义此操作的精确语义。目前，它应被解析为请求(request)，而不是要求(requirement)。
+requested-write-sync，更改目录模式(Mutating directories mode)：目录内容可能会发生变化。</p>
+<p>当这个标志在描述符上未设置时，
+使用描述符的操作将创建、重命名、删除、修改文件系统对象的数据或元数据，或获取允许这些操作的另一个句柄，
+如果它们本来会成功的话，则将以<a href="#error_code.read_only"><code>error-code::read-only</code></a>失败。</p>
+<p>这只能在目录上设置。</p>
 </li>
 </ul>
 <h4><a name="path_flags"></a><code>flags path-flags</code></h4>
-<p>Flags determining the method of how paths are resolved.</p>
+<p>确定路径解析方法的标志。</p>
 <h5>Flags members</h5>
 <ul>
-<li><a name="path_flags.symlink_follow"></a><code>symlink-follow</code>: <p>As long as the resolved path corresponds to a symbolic link, it is
-expanded.
+<li><a name="path_flags.symlink_follow"></a><code>symlink-follow</code>: <p>只要解析的路径对应符号链接，它就被展开。
 </li>
 </ul>
 <h4><a name="open_flags"></a><code>flags open-flags</code></h4>
-<p>Open flags used by <code>open-at</code>.</p>
+<p>用于<code>open-at</code>的打开标志。</p>
 <h5>Flags members</h5>
 <ul>
 <li>
 <p><a name="open_flags.create"></a><code>create</code>: </p>
-<p>Create file if it does not exist, similar to `O_CREAT` in POSIX.
+<p>如果文件不存在则创建，类似于POSIX中的`O_CREAT`。
 </li>
 <li>
 <p><a name="open_flags.directory"></a><code>directory</code>: </p>
-<p>Fail if not a directory, similar to `O_DIRECTORY` in POSIX.
+<p>如果不是目录则失败，类似于POSIX中的`O_DIRECTORY`。
 </li>
 <li>
 <p><a name="open_flags.exclusive"></a><code>exclusive</code>: </p>
-<p>Fail if file already exists, similar to `O_EXCL` in POSIX.
+<p>如果文件已存在则失败，类似于POSIX中的`O_EXCL`。
 </li>
 <li>
 <p><a name="open_flags.truncate"></a><code>truncate</code>: </p>
-<p>Truncate file to size 0, similar to `O_TRUNC` in POSIX.
+<p>文件尺寸截断为0，类似于POSIX中的`O_TRUNC`。
 </li>
 </ul>
 <h4><a name="link_count"></a><code>type link-count</code></h4>
 <p><code>u64</code></p>
-<p>Number of hard links to an inode.
+<p>指向索引节点(inode)的硬链接(hard links)数量。
 <h4><a name="descriptor_stat"></a><code>record descriptor-stat</code></h4>
-<p>File attributes.</p>
-<p>Note: This was called <code>filestat</code> in earlier versions of WASI.</p>
+<p>文件属性(File attributes)。</p>
+<p>注意：在WASI的早期版本中，这被称为<code>filestat</code>。</p>
 <h5>Record Fields</h5>
 <ul>
 <li>
 <p><a name="descriptor_stat.type"></a><code>type</code>: <a href="#descriptor_type"><a href="#descriptor_type"><code>descriptor-type</code></a></a></p>
-<p>File type.
+<p>文件类型(File type)。
 </li>
 <li>
 <p><a name="descriptor_stat.link_count"></a><a href="#link_count"><code>link-count</code></a>: <a href="#link_count"><a href="#link_count"><code>link-count</code></a></a></p>
-<p>Number of hard links to the file.
+<p>文件硬链接数量(Number of hard links to the file)。
 </li>
 <li>
 <p><a name="descriptor_stat.size"></a><code>size</code>: <a href="#filesize"><a href="#filesize"><code>filesize</code></a></a></p>
-<p>For regular files, the file size in bytes. For symbolic links, the
-length in bytes of the pathname contained in the symbolic link.
+<p>对于普通文件，指的是以字节为单位的文件大小。
+对于符号链接，指的是符号链接中包含的路径名(pathname)的字节长度。
 </li>
 <li>
 <p><a name="descriptor_stat.data_access_timestamp"></a><code>data-access-timestamp</code>: option&lt;<a href="#datetime"><a href="#datetime"><code>datetime</code></a></a>&gt;</p>
-<p>Last data access timestamp.
-<p>If the <code>option</code> is none, the platform doesn't maintain an access
-timestamp for this file.</p>
+<p>最后一次数据访问时间戳。
+<p>如果<code>option</code>为none，则平台不维护该文件的访问时间戳。</p>
 </li>
 <li>
 <p><a name="descriptor_stat.data_modification_timestamp"></a><code>data-modification-timestamp</code>: option&lt;<a href="#datetime"><a href="#datetime"><code>datetime</code></a></a>&gt;</p>
-<p>Last data modification timestamp.
-<p>If the <code>option</code> is none, the platform doesn't maintain a
-modification timestamp for this file.</p>
+<p>最后一次数据修改时间戳。
+<p>如果<code>option</code>为none，则平台不维护该文件的修改时间戳。</p>
 </li>
 <li>
 <p><a name="descriptor_stat.status_change_timestamp"></a><code>status-change-timestamp</code>: option&lt;<a href="#datetime"><a href="#datetime"><code>datetime</code></a></a>&gt;</p>
-<p>Last file status-change timestamp.
-<p>If the <code>option</code> is none, the platform doesn't maintain a
-status-change timestamp for this file.</p>
+<p>最后一次文件状态更改时间戳。
+<p>如果<code>option</code>为none，则平台不维护该文件的状态更改时间戳。</p>
 </li>
 </ul>
 <h4><a name="new_timestamp"></a><code>variant new-timestamp</code></h4>
-<p>When setting a timestamp, this gives the value to set it to.</p>
+<p>当设置时间戳时，它表示要设置的值。</p>
 <h5>Variant Cases</h5>
 <ul>
 <li>
 <p><a name="new_timestamp.no_change"></a><code>no-change</code></p>
-<p>Leave the timestamp set to its previous value.
+<p>将时间戳设置为之前的值。
 </li>
 <li>
 <p><a name="new_timestamp.now"></a><a href="#now"><code>now</code></a></p>
-<p>Set the timestamp to the current time of the system clock associated
-with the filesystem.
+<p>将时间戳设置为与文件系统关联的系统时钟的当前时间。
 </li>
 <li>
 <p><a name="new_timestamp.timestamp"></a><code>timestamp</code>: <a href="#datetime"><a href="#datetime"><code>datetime</code></a></a></p>
-<p>Set the timestamp to the given value.
+<p>将时间戳设置为给定值。
 </li>
 </ul>
 <h4><a name="directory_entry"></a><code>record directory-entry</code></h4>
-<p>A directory entry.</p>
+<p>目录项。</p>
 <h5>Record Fields</h5>
 <ul>
 <li>
 <p><a name="directory_entry.type"></a><code>type</code>: <a href="#descriptor_type"><a href="#descriptor_type"><code>descriptor-type</code></a></a></p>
-<p>The type of the file referred to by this directory entry.
+<p>该目录项引用的文件类型。
 </li>
 <li>
 <p><a name="directory_entry.name"></a><code>name</code>: <code>string</code></p>
-<p>The name of the object.
+<p>对象名称。
 </li>
 </ul>
 <h4><a name="error_code"></a><code>enum error-code</code></h4>
-<p>Error codes returned by functions, similar to <code>errno</code> in POSIX.
-Not all of these error codes are returned by the functions provided by this
-API; some are used in higher-level library layers, and others are provided
-merely for alignment with POSIX.</p>
+<p>函数返回的错误码，类似于POSIX中的<code>errno</code>。
+并非所有这些错误码都由此API提供的函数返回；
+其中一些用于更高级库层，而其他一些仅用于与POSIX对齐。</p>
 <h5>Enum Cases</h5>
 <ul>
 <li>
 <p><a name="error_code.access"></a><code>access</code></p>
-<p>Permission denied, similar to `EACCES` in POSIX.
+<p>权限被拒绝，类似于POSIX中的`EACCES`。
 </li>
 <li>
 <p><a name="error_code.would_block"></a><code>would-block</code></p>
-<p>Resource unavailable, or operation would block, similar to `EAGAIN` and `EWOULDBLOCK` in POSIX.
+<p>资源不可用，或操作将阻塞，类似于POSIX中的`EAGAIN`和`EWOULDBLOCK`。
 </li>
 <li>
 <p><a name="error_code.already"></a><code>already</code></p>
-<p>Connection already in progress, similar to `EALREADY` in POSIX.
+<p>连接已在进行中，类似于POSIX中的`EALREADY`。
 </li>
 <li>
 <p><a name="error_code.bad_descriptor"></a><code>bad-descriptor</code></p>
-<p>Bad descriptor, similar to `EBADF` in POSIX.
+<p>错误的描述符，类似于POSIX中的`EBADF`。
 </li>
 <li>
 <p><a name="error_code.busy"></a><code>busy</code></p>
-<p>Device or resource busy, similar to `EBUSY` in POSIX.
+<p>设备或资源繁忙，类似于POSIX中的`EBUSY`。
 </li>
 <li>
 <p><a name="error_code.deadlock"></a><code>deadlock</code></p>
-<p>Resource deadlock would occur, similar to `EDEADLK` in POSIX.
+<p>资源死锁将发生，类似于POSIX中的`EDEADLK`。
 </li>
 <li>
 <p><a name="error_code.quota"></a><code>quota</code></p>
-<p>Storage quota exceeded, similar to `EDQUOT` in POSIX.
+<p>超出存储配额，类似于POSIX中的`EDQUOT`。
 </li>
 <li>
 <p><a name="error_code.exist"></a><code>exist</code></p>
-<p>File exists, similar to `EEXIST` in POSIX.
+<p>文件存在，类似于POSIX中的`EEXIST`。
 </li>
 <li>
 <p><a name="error_code.file_too_large"></a><code>file-too-large</code></p>
-<p>File too large, similar to `EFBIG` in POSIX.
+<p>文件过大，类似于POSIX中的`EFBIG`。
 </li>
 <li>
 <p><a name="error_code.illegal_byte_sequence"></a><code>illegal-byte-sequence</code></p>
-<p>Illegal byte sequence, similar to `EILSEQ` in POSIX.
+<p>非法字符序列，类似于POSIX中的`EILSEQ`。
 </li>
 <li>
 <p><a name="error_code.in_progress"></a><code>in-progress</code></p>
-<p>Operation in progress, similar to `EINPROGRESS` in POSIX.
+<p>进行中的操作，类似于POSIX中的`EINPROGRESS`。
 </li>
 <li>
 <p><a name="error_code.interrupted"></a><code>interrupted</code></p>
-<p>Interrupted function, similar to `EINTR` in POSIX.
+<p>中断函数，类似于POSIX中的`EINTR`。
 </li>
 <li>
 <p><a name="error_code.invalid"></a><code>invalid</code></p>
-<p>Invalid argument, similar to `EINVAL` in POSIX.
+<p>无效参数，类似于POSIX中的`EINVAL`。
 </li>
 <li>
 <p><a name="error_code.io"></a><code>io</code></p>
-<p>I/O error, similar to `EIO` in POSIX.
+<p>I/O错误，类似于POSIX中的`EIO`。
 </li>
 <li>
 <p><a name="error_code.is_directory"></a><code>is-directory</code></p>
-<p>Is a directory, similar to `EISDIR` in POSIX.
+<p>是一个目录，类似于POSIX中的`EISDIR`。
 </li>
 <li>
 <p><a name="error_code.loop"></a><code>loop</code></p>
-<p>Too many levels of symbolic links, similar to `ELOOP` in POSIX.
+<p>符号链接层级过多，类似于POSIX中的`ELOOP`。
 </li>
 <li>
 <p><a name="error_code.too_many_links"></a><code>too-many-links</code></p>
-<p>Too many links, similar to `EMLINK` in POSIX.
+<p>链接过多，类似于POSIX中的`EMLINK`。
 </li>
 <li>
 <p><a name="error_code.message_size"></a><code>message-size</code></p>
-<p>Message too large, similar to `EMSGSIZE` in POSIX.
+<p>消息过大，类似于POSIX中的`EMSGSIZE`。
 </li>
 <li>
 <p><a name="error_code.name_too_long"></a><code>name-too-long</code></p>
-<p>Filename too long, similar to `ENAMETOOLONG` in POSIX.
+<p>文件名过长，类似于POSIX中的`ENAMETOOLONG`。
 </li>
 <li>
 <p><a name="error_code.no_device"></a><code>no-device</code></p>
-<p>No such device, similar to `ENODEV` in POSIX.
+<p>无此设备，类似于POSIX中的`ENODEV`。
 </li>
 <li>
 <p><a name="error_code.no_entry"></a><code>no-entry</code></p>
-<p>No such file or directory, similar to `ENOENT` in POSIX.
+<p>无此文件或目录，类似于POSIX中的`ENOENT`。
 </li>
 <li>
 <p><a name="error_code.no_lock"></a><code>no-lock</code></p>
-<p>No locks available, similar to `ENOLCK` in POSIX.
+<p>无可用锁，类似于POSIX中的`ENOLCK`。
 </li>
 <li>
 <p><a name="error_code.insufficient_memory"></a><code>insufficient-memory</code></p>
-<p>Not enough space, similar to `ENOMEM` in POSIX.
+<p>空间不足，类似于POSIX中的`ENOMEM`。
 </li>
 <li>
 <p><a name="error_code.insufficient_space"></a><code>insufficient-space</code></p>
-<p>No space left on device, similar to `ENOSPC` in POSIX.
+<p>设备上无剩余空间，类似于POSIX中的`ENOSPC`。
 </li>
 <li>
 <p><a name="error_code.not_directory"></a><code>not-directory</code></p>
-<p>Not a directory or a symbolic link to a directory, similar to `ENOTDIR` in POSIX.
+<p>不是目录或指向目录的符号链接，类似于POSIX中的`ENOTDIR`。
 </li>
 <li>
 <p><a name="error_code.not_empty"></a><code>not-empty</code></p>
-<p>Directory not empty, similar to `ENOTEMPTY` in POSIX.
+<p>目录非空，类似于POSIX中的`ENOTEMPTY`。
 </li>
 <li>
 <p><a name="error_code.not_recoverable"></a><code>not-recoverable</code></p>
-<p>State not recoverable, similar to `ENOTRECOVERABLE` in POSIX.
+<p>状态无法恢复，类似于POSIX中的`ENOTRECOVERABLE`。
 </li>
 <li>
 <p><a name="error_code.unsupported"></a><code>unsupported</code></p>
-<p>Not supported, similar to `ENOTSUP` and `ENOSYS` in POSIX.
+<p>不支持，类似于POSIX中的`ENOTSUP`和`ENOSYS`。
 </li>
 <li>
 <p><a name="error_code.no_tty"></a><code>no-tty</code></p>
-<p>Inappropriate I/O control operation, similar to `ENOTTY` in POSIX.
+<p>不适当的I/O控制操作，类似于POSIX中的`ENOTTY`。
 </li>
 <li>
 <p><a name="error_code.no_such_device"></a><code>no-such-device</code></p>
-<p>No such device or address, similar to `ENXIO` in POSIX.
+<p>无此设备或地址，类似于POSIX中的`ENXIO`。
 </li>
 <li>
 <p><a name="error_code.overflow"></a><code>overflow</code></p>
-<p>Value too large to be stored in data type, similar to `EOVERFLOW` in POSIX.
+<p>值过大无法存储在数据类型中，类似于POSIX中的`EOVERFLOW`。
 </li>
 <li>
 <p><a name="error_code.not_permitted"></a><code>not-permitted</code></p>
-<p>Operation not permitted, similar to `EPERM` in POSIX.
+<p>操作不允许，类似于POSIX中的`EPERM`。
 </li>
 <li>
 <p><a name="error_code.pipe"></a><code>pipe</code></p>
-<p>Broken pipe, similar to `EPIPE` in POSIX.
+<p>管道中断，类似于POSIX中的`EPIPE`。
 </li>
 <li>
 <p><a name="error_code.read_only"></a><code>read-only</code></p>
-<p>Read-only file system, similar to `EROFS` in POSIX.
+<p>只读文件系统，类似于POSIX中的`EROFS`。
 </li>
 <li>
 <p><a name="error_code.invalid_seek"></a><code>invalid-seek</code></p>
-<p>Invalid seek, similar to `ESPIPE` in POSIX.
+<p>无效查找，类似于POSIX中的`ESPIPE`。
 </li>
 <li>
 <p><a name="error_code.text_file_busy"></a><code>text-file-busy</code></p>
-<p>Text file busy, similar to `ETXTBSY` in POSIX.
+<p>文本文件繁忙，类似于POSIX中的`ETXTBSY`。
 </li>
 <li>
 <p><a name="error_code.cross_device"></a><code>cross-device</code></p>
-<p>Cross-device link, similar to `EXDEV` in POSIX.
+<p>跨设备链接，类似于POSIX中的`EXDEV`。
 </li>
 </ul>
 <h4><a name="advice"></a><code>enum advice</code></h4>
-<p>File or memory access pattern advisory information.</p>
+<p>文件或内存访问模式的建议信息。</p>
 <h5>Enum Cases</h5>
 <ul>
 <li>
 <p><a name="advice.normal"></a><code>normal</code></p>
-<p>The application has no advice to give on its behavior with respect
-to the specified data.
+<p>应用程序对其与指定数据相关的行为没有建议。
 </li>
 <li>
 <p><a name="advice.sequential"></a><code>sequential</code></p>
-<p>The application expects to access the specified data sequentially
-from lower offsets to higher offsets.
+<p>应用程序期望以低偏移量到高偏移量顺序访问指定的数据。
 </li>
 <li>
 <p><a name="advice.random"></a><code>random</code></p>
-<p>The application expects to access the specified data in a random
-order.
+<p>应用程序期望以随机顺序访问指定的数据。
 </li>
 <li>
 <p><a name="advice.will_need"></a><code>will-need</code></p>
-<p>The application expects to access the specified data in the near
-future.
+<p>应用程序期望在不久的将来访问指定的数据。
 </li>
 <li>
 <p><a name="advice.dont_need"></a><code>dont-need</code></p>
-<p>The application expects that it will not access the specified data
-in the near future.
+<p>应用程序预计在不久的将来不会访问指定的数据。
 </li>
 <li>
 <p><a name="advice.no_reuse"></a><code>no-reuse</code></p>
-<p>The application expects to access the specified data once and then
-not reuse it thereafter.
+<p>应用程序期望访问指定的数据一次，然后不再使用它。
 </li>
 </ul>
 <h4><a name="metadata_hash_value"></a><code>record metadata-hash-value</code></h4>
-<p>A 128-bit hash value, split into parts because wasm doesn't have a
-128-bit integer type.</p>
+<p>一个128位的哈希值，因为wasm没有128位的整数类型而被分成几个部分。</p>
 <h5>Record Fields</h5>
 <ul>
 <li>
 <p><a name="metadata_hash_value.lower"></a><code>lower</code>: <code>u64</code></p>
-<p>64 bits of a 128-bit hash value.
+<p>128位哈希值中的64位。
 </li>
 <li>
 <p><a name="metadata_hash_value.upper"></a><code>upper</code>: <code>u64</code></p>
-<p>Another 64 bits of a 128-bit hash value.
+<p>128位哈希值中的另外64位。
 </li>
 </ul>
 <h4><a name="descriptor"></a><code>resource descriptor</code></h4>
-<p>A descriptor is a reference to a filesystem object, which may be a file,
-directory, named pipe, special file, or other object on which filesystem
-calls may be made.</p>
+<p>描述符是对文件系统对象的引用，该对象可以是文件、目录、命名管道、特殊文件或可以对其进行文件系统调用的其他对象。</p>
 <h4><a name="directory_entry_stream"></a><code>resource directory-entry-stream</code></h4>
-<h2>A stream of directory entries.</h2>
+<h2>目录项的流。</h2>
 <h3>Functions</h3>
 <h4><a name="method_descriptor_read_via_stream"></a><code>[method]descriptor.read-via-stream: func</code></h4>
-<p>Return a stream for reading from a file, if available.</p>
-<p>May fail with an error-code describing why the file cannot be read.</p>
-<p>Multiple read, write, and append streams may be active on the same open
-file and they do not interfere with each other.</p>
-<p>Note: This allows using <code>read-stream</code>, which is similar to <code>read</code> in POSIX.</p>
+<p>如果可用，返回用于读取文件的流。</p>
+<p>可能会以error-code失败，描述为什么无法读取文件。</p>
+<p>多个读、写和追加流可能活动于同一个打开的文件，并且它们不会相互干扰。</p>
+<p>注意：其允许使用<code>read-stream</code>，类似于POSIX中的<code>read</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_read_via_stream.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -914,10 +875,9 @@ file and they do not interfere with each other.</p>
 <li><a name="method_descriptor_read_via_stream.0"></a> result&lt;own&lt;<a href="#input_stream"><a href="#input_stream"><code>input-stream</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_write_via_stream"></a><code>[method]descriptor.write-via-stream: func</code></h4>
-<p>Return a stream for writing to a file, if available.</p>
-<p>May fail with an error-code describing why the file cannot be written.</p>
-<p>Note: This allows using <code>write-stream</code>, which is similar to <code>write</code> in
-POSIX.</p>
+<p>如果可用，返回用于写入文件的流。</p>
+<p>可能会以error-code失败，描述为什么无法写入文件。</p>
+<p>注意：其允许使用<code>write-stream</code>，类似于POSIX中的<code>write</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_write_via_stream.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -928,10 +888,9 @@ POSIX.</p>
 <li><a name="method_descriptor_write_via_stream.0"></a> result&lt;own&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_append_via_stream"></a><code>[method]descriptor.append-via-stream: func</code></h4>
-<p>Return a stream for appending to a file, if available.</p>
-<p>May fail with an error-code describing why the file cannot be appended.</p>
-<p>Note: This allows using <code>write-stream</code>, which is similar to <code>write</code> with
-<code>O_APPEND</code> in in POSIX.</p>
+<p>如果可用，返回用于追加文件的流。</p>
+<p>可能会以error-code失败，描述为什么无法追加文件。</p>
+<p>注意：其允许使用<code>write-stream</code>，类似于POSIX中的<code>write</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_append_via_stream.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -941,8 +900,8 @@ POSIX.</p>
 <li><a name="method_descriptor_append_via_stream.0"></a> result&lt;own&lt;<a href="#output_stream"><a href="#output_stream"><code>output-stream</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_advise"></a><code>[method]descriptor.advise: func</code></h4>
-<p>Provide file advisory information on a descriptor.</p>
-<p>This is similar to <code>posix_fadvise</code> in POSIX.</p>
+<p>在描述符上提供文件建议信息。</p>
+<p>类似于POSIX中的<code>posix_fadvise</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_advise.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -955,10 +914,9 @@ POSIX.</p>
 <li><a name="method_descriptor_advise.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_sync_data"></a><code>[method]descriptor.sync-data: func</code></h4>
-<p>Synchronize the data of a file to disk.</p>
-<p>This function succeeds with no effect if the file descriptor is not
-opened for writing.</p>
-<p>Note: This is similar to <code>fdatasync</code> in POSIX.</p>
+<p>同步文件数据至磁盘。</p>
+<p>如果文件描述符未打开写入，则此函数会成功但没有效果。</p>
+<p>注意：其类似于POSIX中的<code>fdatasync</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_sync_data.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -968,10 +926,9 @@ opened for writing.</p>
 <li><a name="method_descriptor_sync_data.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_get_flags"></a><code>[method]descriptor.get-flags: func</code></h4>
-<p>Get flags associated with a descriptor.</p>
-<p>Note: This returns similar flags to <code>fcntl(fd, F_GETFL)</code> in POSIX.</p>
-<p>Note: This returns the value that was the <code>fs_flags</code> value returned
-from <code>fdstat_get</code> in earlier versions of WASI.</p>
+<p>获取与描述符关联的标志。</p>
+<p>注意：其返回的标志类似于POSIX中的<code>fcntl(fd, F_GETFL)</code>。</p>
+<p>注意：该值在WASI的早期版本中是<code>fdstat_get</code>的返回值<code>fs_flags</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_get_flags.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -981,13 +938,10 @@ from <code>fdstat_get</code> in earlier versions of WASI.</p>
 <li><a name="method_descriptor_get_flags.0"></a> result&lt;<a href="#descriptor_flags"><a href="#descriptor_flags"><code>descriptor-flags</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_get_type"></a><code>[method]descriptor.get-type: func</code></h4>
-<p>Get the dynamic type of a descriptor.</p>
-<p>Note: This returns the same value as the <code>type</code> field of the <code>fd-stat</code>
-returned by <code>stat</code>, <code>stat-at</code> and similar.</p>
-<p>Note: This returns similar flags to the <code>st_mode &amp; S_IFMT</code> value provided
-by <code>fstat</code> in POSIX.</p>
-<p>Note: This returns the value that was the <code>fs_filetype</code> value returned
-from <code>fdstat_get</code> in earlier versions of WASI.</p>
+<p>获取描述符的动态类型。</p>
+<p>注意：此返回与<code>stat</code>、<code>stat-at</code>等返回的<code>fd-stat</code>d的 <code>type</code>字段的值相同。</p>
+<p>注意：此返回的标志类似于POSIX中<code>fstat</code>提供的<code>st_mode &amp; S_IFMT</code>值。</p>
+<p>注意：此返回的值是早期 WASI 版本中<code>fdstat_get</code>返回的<code>fs_filetype</code>值。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_get_type.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -997,9 +951,8 @@ from <code>fdstat_get</code> in earlier versions of WASI.</p>
 <li><a name="method_descriptor_get_type.0"></a> result&lt;<a href="#descriptor_type"><a href="#descriptor_type"><code>descriptor-type</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_set_size"></a><code>[method]descriptor.set-size: func</code></h4>
-<p>Adjust the size of an open file. If this increases the file's size, the
-extra bytes are filled with zeros.</p>
-<p>Note: This was called <code>fd_filestat_set_size</code> in earlier versions of WASI.</p>
+<p>调整已打开文件的大小。如果增加文件的大小，额外的字节将被填充为零。</p>
+<p>注意：在早期版本的 WASI 中，这被称为 <code>fd_filestat_set_size</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_set_size.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1010,9 +963,9 @@ extra bytes are filled with zeros.</p>
 <li><a name="method_descriptor_set_size.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_set_times"></a><code>[method]descriptor.set-times: func</code></h4>
-<p>Adjust the timestamps of an open file or directory.</p>
-<p>Note: This is similar to <code>futimens</code> in POSIX.</p>
-<p>Note: This was called <code>fd_filestat_set_times</code> in earlier versions of WASI.</p>
+<p>调整已打开文件或目录的时间戳。</p>
+<p>注意：其类似于POSIX中的<code>futimens</code>。</p>
+<p>注意：在早期版本的 WASI 中，这被称为 <code>fd_filestat_set_times</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_set_times.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1024,14 +977,13 @@ extra bytes are filled with zeros.</p>
 <li><a name="method_descriptor_set_times.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_read"></a><code>[method]descriptor.read: func</code></h4>
-<p>Read from a descriptor, without using and updating the descriptor's offset.</p>
-<p>This function returns a list of bytes containing the data that was
-read, along with a bool which, when true, indicates that the end of the
-file was reached. The returned list will contain up to <code>length</code> bytes; it
-may return fewer than requested, if the end of the file is reached or
-if the I/O operation is interrupted.</p>
-<p>In the future, this may change to return a <code>stream&lt;u8, error-code&gt;</code>.</p>
-<p>Note: This is similar to <code>pread</code> in POSIX.</p>
+<p>在不使用和更新描述符的偏移量的情况下，从描述符中读取数据。</p>
+<p>该函数返回一个字节列表，包含已读取的数据，
+以及一个布尔值，当布尔值为true，表示已达到文件末尾。
+返回的列表将包含最多length字节；
+如果达到文件末尾或者 I/O 操作被中断，可能会返回少于请求的字节数。</p>
+<p>将来，可能会更改为返回<code>stream&lt;u8, error-code&gt;</code>。</p>
+<p>注意：其类似于POSIX中的<code>pread</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_read.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1043,12 +995,11 @@ if the I/O operation is interrupted.</p>
 <li><a name="method_descriptor_read.0"></a> result&lt;(list&lt;<code>u8</code>&gt;, <code>bool</code>), <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_write"></a><code>[method]descriptor.write: func</code></h4>
-<p>Write to a descriptor, without using and updating the descriptor's offset.</p>
-<p>It is valid to write past the end of a file; the file is extended to the
-extent of the write, with bytes between the previous end and the start of
-the write set to zero.</p>
-<p>In the future, this may change to take a <code>stream&lt;u8, error-code&gt;</code>.</p>
-<p>Note: This is similar to <code>pwrite</code> in POSIX.</p>
+<p>在不使用和更新描述符的偏移量的情况下，向描述符写入数据。</p>
+<p>可以向文件末尾写入数据；
+文件会被扩展到写入的范围，并且在先前末尾和写入开始之间的字节会被设置为零。</p>
+<p>将来，可能会更改为返回<code>stream&lt;u8, error-code&gt;</code>。</p>
+<p>注意：其类似于POSIX中的<code>pwrite</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_write.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1060,13 +1011,10 @@ the write set to zero.</p>
 <li><a name="method_descriptor_write.0"></a> result&lt;<a href="#filesize"><a href="#filesize"><code>filesize</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_read_directory"></a><code>[method]descriptor.read-directory: func</code></h4>
-<p>Read directory entries from a directory.</p>
-<p>On filesystems where directories contain entries referring to themselves
-and their parents, often named <code>.</code> and <code>..</code> respectively, these entries
-are omitted.</p>
-<p>This always returns a new stream which starts at the beginning of the
-directory. Multiple streams may be active on the same directory, and they
-do not interfere with each other.</p>
+<p>从目录中读取目录条目。</p>
+<p>在文件系统中，如果目录包含指向自身和其父目录的条目，
+通常分别命名为<code>.</code>和<code>..</code>，这些条目将被省略。</p>
+<p>这总是返回一个新的流，该流从目录的开头开始。同一目录上可以有多个活动的流，它们不会相互干扰。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_read_directory.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1076,10 +1024,9 @@ do not interfere with each other.</p>
 <li><a name="method_descriptor_read_directory.0"></a> result&lt;own&lt;<a href="#directory_entry_stream"><a href="#directory_entry_stream"><code>directory-entry-stream</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_sync"></a><code>[method]descriptor.sync: func</code></h4>
-<p>Synchronize the data and metadata of a file to disk.</p>
-<p>This function succeeds with no effect if the file descriptor is not
-opened for writing.</p>
-<p>Note: This is similar to <code>fsync</code> in POSIX.</p>
+<p>同步文件的数据和元数据至磁盘。</p>
+<p>如果文件描述符未打开写入，则此函数会成功但没有效果。</p>
+<p>注意：其类似于POSIX中的<code>fsync</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_sync.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1089,8 +1036,8 @@ opened for writing.</p>
 <li><a name="method_descriptor_sync.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_create_directory_at"></a><code>[method]descriptor.create-directory-at: func</code></h4>
-<p>Create a directory.</p>
-<p>Note: This is similar to <code>mkdirat</code> in POSIX.</p>
+<p>创建目录。</p>
+<p>注意：其类似于POSIX中的<code>mkdirat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_create_directory_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1101,13 +1048,11 @@ opened for writing.</p>
 <li><a name="method_descriptor_create_directory_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_stat"></a><code>[method]descriptor.stat: func</code></h4>
-<p>Return the attributes of an open file or directory.</p>
-<p>Note: This is similar to <code>fstat</code> in POSIX, except that it does not return
-device and inode information. For testing whether two descriptors refer to
-the same underlying filesystem object, use <code>is-same-object</code>. To obtain
-additional data that can be used do determine whether a file has been
-modified, use <code>metadata-hash</code>.</p>
-<p>Note: This was called <code>fd_filestat_get</code> in earlier versions of WASI.</p>
+<p>返回已打开文件或目录的属性。</p>
+<p>注意：其类似于POSIX中的<code>fstat</code>，除了它不返回设备和索引节点的信息。
+要测试两个文件描述符是否指向同一底层文件系统对象，使用<code>is-same-object</code>。
+要获取其他可以用来确定文件是否已被修改的数据，使用<code>metadata-hash</code>。</p>
+<p>注意：在早期的WASI版本中被称为<code>fd_filestat_get</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_stat.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1117,11 +1062,10 @@ modified, use <code>metadata-hash</code>.</p>
 <li><a name="method_descriptor_stat.0"></a> result&lt;<a href="#descriptor_stat"><a href="#descriptor_stat"><code>descriptor-stat</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_stat_at"></a><code>[method]descriptor.stat-at: func</code></h4>
-<p>Return the attributes of a file or directory.</p>
-<p>Note: This is similar to <code>fstatat</code> in POSIX, except that it does not
-return device and inode information. See the <code>stat</code> description for a
-discussion of alternatives.</p>
-<p>Note: This was called <code>path_filestat_get</code> in earlier versions of WASI.</p>
+<p>返回文件或目录的属性。</p>
+<p>注意：其类似于POSIX中的<code>fstatat</code>，除了它不返回设备和索引节点的信息。
+请参阅<code>stat</code>描述中关于替代方案的讨论。</p>
+<p>注意：在早期的WASI版本中被称为<code>path_filestat_get</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_stat_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1133,10 +1077,9 @@ discussion of alternatives.</p>
 <li><a name="method_descriptor_stat_at.0"></a> result&lt;<a href="#descriptor_stat"><a href="#descriptor_stat"><code>descriptor-stat</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_set_times_at"></a><code>[method]descriptor.set-times-at: func</code></h4>
-<p>Adjust the timestamps of a file or directory.</p>
-<p>Note: This is similar to <code>utimensat</code> in POSIX.</p>
-<p>Note: This was called <code>path_filestat_set_times</code> in earlier versions of
-WASI.</p>
+<p>调整文件或目录的时间戳。</p>
+<p>注意：其类似于POSIX中的<code>utimensat</code>。</p>
+<p>注意：在早期的WASI版本中被称为<code>path_filestat_set_times</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_set_times_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1150,8 +1093,8 @@ WASI.</p>
 <li><a name="method_descriptor_set_times_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_link_at"></a><code>[method]descriptor.link-at: func</code></h4>
-<p>Create a hard link.</p>
-<p>Note: This is similar to <code>linkat</code> in POSIX.</p>
+<p>创建硬链接(hard link)。</p>
+<p>注意：其类似于POSIX中的<code>linkat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_link_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1165,20 +1108,17 @@ WASI.</p>
 <li><a name="method_descriptor_link_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_open_at"></a><code>[method]descriptor.open-at: func</code></h4>
-<p>Open a file or directory.</p>
-<p>The returned descriptor is not guaranteed to be the lowest-numbered
-descriptor not currently open/ it is randomized to prevent applications
-from depending on making assumptions about indexes, since this is
-error-prone in multi-threaded contexts. The returned descriptor is
-guaranteed to be less than 2**31.</p>
-<p>If <code>flags</code> contains <a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a>, and the base
-descriptor doesn't have <a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a> set,
-<code>open-at</code> fails with <a href="#error_code.read_only"><code>error-code::read-only</code></a>.</p>
-<p>If <code>flags</code> contains <code>write</code> or <code>mutate-directory</code>, or <a href="#open_flags"><code>open-flags</code></a>
-contains <code>truncate</code> or <code>create</code>, and the base descriptor doesn't have
-<a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a> set, <code>open-at</code> fails with
-<a href="#error_code.read_only"><code>error-code::read-only</code></a>.</p>
-<p>Note: This is similar to <code>openat</code> in POSIX.</p>
+<p>打开文件或目录。</p>
+<p>返回的描述符不能保证是当前未打开的最低编号(lowest-numbered)描述符，
+它是随机的以防止应用程序依赖于对索引的假设，因为在多线程环境中这样做是容易出错的。
+返回的描述符保证小于2**31。</p>
+<p>如果<code>flags</code>包含<a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a>，
+并且基础描述符没有设置<a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a>，
+则<code>open-at</code>将失败，并返回<a href="#error_code.read_only"><code>error-code::read-only</code></a>。</p>
+<p>如果<code>flags</code>包含<code>write</code>或<code>mutate-directory</code>，或者<a href="#open_flags"><code>open-flags</code></a>包含<code>truncate</code>或<code>create</code>，
+并且基础描述符没有设置 <a href="#descriptor_flags.mutate_directory"><code>descriptor-flags::mutate-directory</code></a>，
+则 <code>open-at</code>将失败，并返回<a href="#error_code.read_only"><code>error-code::read-only</code></a>。</p>
+<p>注意：其类似于POSIX中的<code>openat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_open_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1192,10 +1132,10 @@ contains <code>truncate</code> or <code>create</code>, and the base descriptor d
 <li><a name="method_descriptor_open_at.0"></a> result&lt;own&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_readlink_at"></a><code>[method]descriptor.readlink-at: func</code></h4>
-<p>Read the contents of a symbolic link.</p>
-<p>If the contents contain an absolute or rooted path in the underlying
-filesystem, this function fails with <a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>.</p>
-<p>Note: This is similar to <code>readlinkat</code> in POSIX.</p>
+<p>读取符号连接的内容。</p>
+<p>如果内容包含底层文件系统中的绝对路径或根路径，
+此函数将失败，并返回 <a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>。</p>
+<p>注意：其类似于POSIX中的<code>readlinkat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_readlink_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1206,9 +1146,9 @@ filesystem, this function fails with <a href="#error_code.not_permitted"><code>e
 <li><a name="method_descriptor_readlink_at.0"></a> result&lt;<code>string</code>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_remove_directory_at"></a><code>[method]descriptor.remove-directory-at: func</code></h4>
-<p>Remove a directory.</p>
-<p>Return <a href="#error_code.not_empty"><code>error-code::not-empty</code></a> if the directory is not empty.</p>
-<p>Note: This is similar to <code>unlinkat(fd, path, AT_REMOVEDIR)</code> in POSIX.</p>
+<p>删除目录。</p>
+<p>如果目录非空，返回<a href="#error_code.not_empty"><code>error-code::not-empty</code></a>。</p>
+<p>注意：其类似于POSIX中的<code>unlinkat(fd, path, AT_REMOVEDIR)</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_remove_directory_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1219,8 +1159,8 @@ filesystem, this function fails with <a href="#error_code.not_permitted"><code>e
 <li><a name="method_descriptor_remove_directory_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_rename_at"></a><code>[method]descriptor.rename-at: func</code></h4>
-<p>Rename a filesystem object.</p>
-<p>Note: This is similar to <code>renameat</code> in POSIX.</p>
+<p>读取文件系统对象。</p>
+<p>注意：其类似于POSIX中的<code>renameat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_rename_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1233,10 +1173,9 @@ filesystem, this function fails with <a href="#error_code.not_permitted"><code>e
 <li><a name="method_descriptor_rename_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_symlink_at"></a><code>[method]descriptor.symlink-at: func</code></h4>
-<p>Create a symbolic link (also known as a &quot;symlink&quot;).</p>
-<p>If <code>old-path</code> starts with <code>/</code>, the function fails with
-<a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>.</p>
-<p>Note: This is similar to <code>symlinkat</code> in POSIX.</p>
+<p>创建符号链接（symbolic link，也称为“symlink”）</p>
+<p>如果<code>old-path</code>以<code>/</code>开头，此函数将失败并返回<a href="#error_code.not_permitted"><code>error-code::not-permitted</code></a>。</p>
+<p>注意：其类似于POSIX中的<code>symlinkat</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_symlink_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1248,9 +1187,9 @@ filesystem, this function fails with <a href="#error_code.not_permitted"><code>e
 <li><a name="method_descriptor_symlink_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_unlink_file_at"></a><code>[method]descriptor.unlink-file-at: func</code></h4>
-<p>Unlink a filesystem object that is not a directory.</p>
-<p>Return <a href="#error_code.is_directory"><code>error-code::is-directory</code></a> if the path refers to a directory.
-Note: This is similar to <code>unlinkat(fd, path, 0)</code> in POSIX.</p>
+<p>取消链接为不是目录的文件系统对象。</p>
+<p>如果路径指向一个目录，则返回<a href="#error_code.is_directory"><code>error-code::is-directory</code></a>。
+注意：其类似于POSIX中的<code>unlinkat(fd, path, 0)</code>。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_unlink_file_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1261,11 +1200,9 @@ Note: This is similar to <code>unlinkat(fd, path, 0)</code> in POSIX.</p>
 <li><a name="method_descriptor_unlink_file_at.0"></a> result&lt;_, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_is_same_object"></a><code>[method]descriptor.is-same-object: func</code></h4>
-<p>Test whether two descriptors refer to the same filesystem object.</p>
-<p>In POSIX, this corresponds to testing whether the two descriptors have the
-same device (<code>st_dev</code>) and inode (<code>st_ino</code> or <code>d_ino</code>) numbers.
-wasi-filesystem does not expose device and inode numbers, so this function
-may be used instead.</p>
+<p>测试两个描述符是否引用同一个文件系统对象。</p>
+<p>在POSIX中，这相当于测试两个描述符是否具有相同的设备号（<code>st_dev</code>）和索引节点号（<code>st_ino</code>或<code>d_ino</code>）。
+wasi-filesystem 不公开设备号和索引节点号，因此可以使用这个函数来代替。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_is_same_object.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1276,23 +1213,17 @@ may be used instead.</p>
 <li><a name="method_descriptor_is_same_object.0"></a> <code>bool</code></li>
 </ul>
 <h4><a name="method_descriptor_metadata_hash"></a><code>[method]descriptor.metadata-hash: func</code></h4>
-<p>Return a hash of the metadata associated with a filesystem object referred
-to by a descriptor.</p>
-<p>This returns a hash of the last-modification timestamp and file size, and
-may also include the inode number, device number, birth timestamp, and
-other metadata fields that may change when the file is modified or
-replaced. It may also include a secret value chosen by the
-implementation and not otherwise exposed.</p>
-<p>Implementations are encourated to provide the following properties:</p>
+<p>返回由描述符引用的文件系统对象相关元数据的哈希值。</p>
+<p>这返回一个由最后修改时间戳和文件大小组成的哈希值，
+还可能包括索引节点号、设备号、创建时间戳等在文件修改或替换时可能发生变化的元数据字段。
+它还可能包含由实现选择的并且不会其他方式暴露的秘密值。</p>
+<p>实现应该提供以下属性：</p>
 <ul>
-<li>If the file is not modified or replaced, the computed hash value should
-usually not change.</li>
-<li>If the object is modified or replaced, the computed hash value should
-usually change.</li>
-<li>The inputs to the hash should not be easily computable from the
-computed hash.</li>
+<li>如果文件未被修改或替换，计算得到的哈希值通常不应改变。</li>
+<li>如果对象被修改或替换，计算得到的哈希值通常应该改变。</li>
+<li>哈希的输入不应该从计算得到的哈希值轻易计算出来。</li>
 </ul>
-<p>However, none of these is required.</p>
+<p>然而，这些都不是必须的。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_metadata_hash.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1302,9 +1233,8 @@ computed hash.</li>
 <li><a name="method_descriptor_metadata_hash.0"></a> result&lt;<a href="#metadata_hash_value"><a href="#metadata_hash_value"><code>metadata-hash-value</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_descriptor_metadata_hash_at"></a><code>[method]descriptor.metadata-hash-at: func</code></h4>
-<p>Return a hash of the metadata associated with a filesystem object referred
-to by a directory descriptor and a relative path.</p>
-<p>This performs the same hash computation as <code>metadata-hash</code>.</p>
+<p>返回由目录描述符和相对路径引用的文件系统对象相关元数据的哈希值。</p>
+<p>这执行与<code>metadata-hash</code>相同的元数据哈希计算。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_descriptor_metadata_hash_at.self"></a><code>self</code>: borrow&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;</li>
@@ -1316,7 +1246,7 @@ to by a directory descriptor and a relative path.</p>
 <li><a name="method_descriptor_metadata_hash_at.0"></a> result&lt;<a href="#metadata_hash_value"><a href="#metadata_hash_value"><code>metadata-hash-value</code></a></a>, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="method_directory_entry_stream_read_directory_entry"></a><code>[method]directory-entry-stream.read-directory-entry: func</code></h4>
-<p>Read a single directory entry from a <a href="#directory_entry_stream"><code>directory-entry-stream</code></a>.</p>
+<p>从<a href="#directory_entry_stream"><code>directory-entry-stream</code></a>中读取单个目录项。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="method_directory_entry_stream_read_directory_entry.self"></a><code>self</code>: borrow&lt;<a href="#directory_entry_stream"><a href="#directory_entry_stream"><code>directory-entry-stream</code></a></a>&gt;</li>
@@ -1326,14 +1256,10 @@ to by a directory descriptor and a relative path.</p>
 <li><a name="method_directory_entry_stream_read_directory_entry.0"></a> result&lt;option&lt;<a href="#directory_entry"><a href="#directory_entry"><code>directory-entry</code></a></a>&gt;, <a href="#error_code"><a href="#error_code"><code>error-code</code></a></a>&gt;</li>
 </ul>
 <h4><a name="filesystem_error_code"></a><code>filesystem-error-code: func</code></h4>
-<p>Attempts to extract a filesystem-related <a href="#error_code"><code>error-code</code></a> from the stream
-<a href="#error"><code>error</code></a> provided.</p>
-<p>Stream operations which return <a href="#stream_error.last_operation_failed"><code>stream-error::last-operation-failed</code></a>
-have a payload with more information about the operation that failed.
-This payload can be passed through to this function to see if there's
-filesystem-related information about the error to return.</p>
-<p>Note that this function is fallible because not all stream-related
-errors are filesystem-related errors.</p>
+<p>尝试从提供的流<a href="#error"><code>error</code></a>中提取与文件系统相关的<a href="#error_code"><code>error-code</code></a>。</p>
+<p>流操作返回<a href="#stream_error.last_operation_failed"><code>stream-error::last-operation-failed</code></a>时，其载荷包含有关失败操作的更多信息。
+可以将此载荷传递给此函数，以查看是否有关于文件系统的错误信息可返回。</p>
+<p>请注意，此函数可能会失败，因为并非所有与流相关的错误都是与文件系统相关的错误。</p>
 <h5>Params</h5>
 <ul>
 <li><a name="filesystem_error_code.err"></a><code>err</code>: borrow&lt;<a href="#error"><a href="#error"><code>error</code></a></a>&gt;</li>
@@ -1351,7 +1277,7 @@ errors are filesystem-related errors.</p>
 ----
 <h3>Functions</h3>
 <h4><a name="get_directories"></a><code>get-directories: func</code></h4>
-<p>Return the set of preopened directories, and their path.</p>
+<p>返回预打开的目录集合及其路径。</p>
 <h5>Return values</h5>
 <ul>
 <li><a name="get_directories.0"></a> list&lt;(own&lt;<a href="#descriptor"><a href="#descriptor"><code>descriptor</code></a></a>&gt;, <code>string</code>)&gt;</li>
