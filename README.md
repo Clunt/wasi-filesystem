@@ -1,86 +1,73 @@
 # WASI filesystem
 
-A proposed [WebAssembly System Interface](https://github.com/WebAssembly/WASI) API.
+[WebAssembly系统接口(WebAssembly System Interface)](https://github.com/WebAssembly/WASI)API提案。
 
-### Current Phase
+### 当前阶段（Current Phase）
 
-WASI-filesystem is currently in [Phase 3].
+WASI-filesystem当前处于[第3阶段(Phase 3)][Phase 3]。
 
 [Phase 3]: https://github.com/WebAssembly/WASI/blob/main/Proposals.md#phase-3---implementation-phase-cg--wg
 
-### Champions
+### 拥护者（Champions）
 
 - Dan Gohman
 
-### Portability Criteria
+### 可移植性标准（Portability Criteria）
 
-WASI filesystem must have host implementations which can pass the testsuite
-on at least Windows, macOS, and Linux.
+WASI filesystem必须有至少可以在Windows、macOS和Linux上通过测试套件(testsuite)的主机实现。
 
-WASI filesystem must have at least two complete independent implementations.
+WASI filesystem必须至少有两个完整独立的实现。
 
 ## Table of Contents
 
-- [Introduction](#introduction)
-- [Goals](#goals)
-- [Non-goals](#non-goals)
-- [API walk-through](#api-walk-through)
-  - [Use case 1](#use-case-1)
-  - [Use case 2](#use-case-2)
-- [Detailed design discussion](#detailed-design-discussion)
-  - [[Tricky design choice 1]](#tricky-design-choice-1)
-  - [[Tricky design choice 2]](#tricky-design-choice-2)
-- [Considered alternatives](#considered-alternatives)
-  - [[Alternative 1]](#alternative-1)
-  - [[Alternative 2]](#alternative-2)
-- [Stakeholder Interest & Feedback](#stakeholder-interest--feedback)
-- [References & acknowledgements](#references--acknowledgements)
+- [介绍（Introduction）](#介绍introduction)
+- [目标（Goals）](#目标goals)
+- [非目标（Non-goals）](#非目标non-goals)
+- [API详解（API walk-through）](#API详解api-walk-through)
+  - [打开文件（Opening-a-file）](#打开文件opening-a-file)
+  - [流式读取文件（Streaming-read-from a file）](#流式读取文件streaming-read-from-a-file)
+  - [从目录中读取（Reading from a directory）](#从目录中读取reading-from-a-directory)
+- [详细设计讨论（Detailed design discussion）](#详细设计讨论detailed-design-discussion)
+  - [WASI filesystem应该大小写敏感、大小写不敏感还是依赖于平台? （Should WASI filesystem be case-sensitive, case-insensitive, or platform-dependent?）](#wasi-filesystem应该大小写敏感大小写不敏感还是依赖于平台should-wasi-filesystem-be-case-sensitive-case-insensitive-or-platform-dependent)
+- [考虑替代方案（Considered alternatives）](#考虑替代方案considered-alternatives)
+  - [完全确定性的文件系统（Fully deterministic filesystem）](#完全确定性的文件系统fully-deterministic-filesystem)
+- [项目相关方利益 & 反馈（Stakeholder Interest & Feedback）](#项目相关方利益--反馈stakeholder-interest--feedback)
+- [参考文献 & 致谢（References & acknowledgements）](#参考文献--致谢references--acknowledgements)
 
-### Introduction
+## 目录（Table of Contents）
 
-WASI filesystem is a WASI API primarily for accessing host filesystems. It
-has function for opening, reading, and writing files, and for working with
-directories.
+WASI filesystem主要用于访问宿主文件系统的WASI。它具有打开、读取和写入文件以及处理目录的功能。
 
-Unlike many filesystem APIs, WASI filesystem is capability-oriented. Instead
-of having functions that implicitly reference a filesystem namespace,
-WASI filesystems' APIs are passed a directory handle along with a path, and
-the path is looked up relative to the given handle, and sandboxed to be
-resolved within that directory. For more information about sandbox, see
-[WASI filesystem path resolution](path-resolution.md).
+不同于许多文件系统API，WASI filesystem是面向能力的。
+WASI文件系统API不是隐式引用文件系统命名空间的函数，
+而是通过给定目录句柄(directory handle)和路径(path)，
+然后相对于给定句柄查找路径，并在该目录内进行沙盒化。
+关于沙盒的更多信息，参见[WASI filesystem路径解析(path resolution)](path-resolution.md)。
 
-WASI filesystem hides some of the surface differences between Windows and
-Unix-style filesystems, however much of its behavior, including the
-semantics of path lookup, and the semantics of files, directories, and
-symlinks, and the constraints on filesystem paths, is host-dependent.
+WASI filesystem隐藏了Windows和Unix风格文件系统之间的表面差异，
+然而其大多行为都依赖于宿主，包括路径查找语义，文件、目录和符号连接的语义，以及对文件系统路径的限制。
 
-WASI filesystem is not intended to be used as a virtual API for accessing
-arbitary resources. Unix's "everything is a file" philosophy is in conflict
-with the goals of supporting modularity and the principle of least authority.
+WASI filesystem并不旨在用于访问任意资源的虚拟API。
+Unix的“一切皆文件(everything is a file)”理念与支持模块化(modularity)和最小权限(least authority)原则的目标存在冲突。
 
-Many of the ideas related to doing capability-based filesystem sandboxing with
-`openat` come from [CloudABI](https://github.com/NuxiNL/cloudabi) and
-[Capsicum](https://wiki.freebsd.org/Capsicum).
+许多关于如何使用`openat`进行基于能力的文件系统沙盒化的想法都来源于[CloudABI](https://github.com/NuxiNL/cloudabi)和[Capsicum](https://wiki.freebsd.org/Capsicum)。
 
-### Goals
+### 目标（Goals）
 
-The primary goal of WASI filesystem is to allow users to use WASI programs to
-access their existing filesystems in a straightforward and efficient manner.
+WASI filesystem的主要目标是允许用户使用WASI程序以直接和高效的方式访问其现有的文件系统。
 
-### Non-goals
+### 非目标（Non-goals）
 
-WASI filesystem is not aiming for deterministic semantics. That would either
-require restricting it to fully controlled private filesystems, which would
-conflict with the goal of giving users access to their existing filesystems,
-or requiring implementations to do a lot of extra work to emulate specific
-defined behaviors, which would conflict with the goal of being efficient.
+WASI filesystem并不以确定性语义为目标。
+这要么需要将其限制为完全受控的私有文件系统，这会与让用户访问其现有文件系统的目标相冲突，
+要么需要实现做大量额外工作来模拟特定定义的行为，这会与高效的目标相冲突。
 
-### API walk-through
+### API详解（API walk-through）
 
-#### Opening a file
+#### 打开文件（Opening a file）
 
 ```rust
-/// Write "Hello, World" into a file called "greeting.txt" in `dir`.
+/// 将"Hello, World"写入`dir`目录下名为"greeting.txt"的文件中。
 fn write_hello_world_to_a_file(dir: Descriptor) -> Result<(), Errno> {
     let at_flags = AtFlags::FollowSymlinks;
     let o_flags = OFlags::Create | OFlags::Trunc;
@@ -96,28 +83,22 @@ fn write_hello_world_to_a_file(dir: Descriptor) -> Result<(), Errno> {
         offset += num_written;
         view = &view[num_writen..];
     }
-    // The file descriptor is closed when it's dropped!
+    // 文件描述符(file descriptor)在被删除(dropped)时被关闭(closed)！
 }
 ```
 
-Perhaps the biggest change from the preview1 version of openat, called
-`path_open`, is the removal of the *rights* flags. Preview1 associates
-a set of flags with every file descriptor enumerating which operations
-may be performed on it, such as reading, writing, appending, truncating,
-and many other operations. In practice, this created a lot of ambiguity
-about how it mapped to POSIX semantics, as it doesn't directly correspond
-to any feature in POSIX, or in Windows either.
+相比于openat的preview1版本（称为`path_open`），最大的变化或许是移除了*rights*标志(flags)。
+Preview1将一组标志(flags)与每个文件描述符关联，枚举可以对其执行的操作，例如读取(reading)、写入(writing)、附加(appending)、截断(truncating)和许多其他操作。
+实际上，这在如何映射到POSIX语义方面造成了许多歧义，因为它不直接对应于POSIX或Windows中的任何功能。
 
-The other major change from preview1 is the introduction of the mode
-argument, which controls the permissions of the generated file. There
-was no way to control permissions in preview1, so this is new
-functionality.
+与preview1相比，另一个重大变化是引入了模式参数(mode argument)，该参数控制所生成文件的权限。
+在preview1中无法控制权限，因此这是新功能。
 
-#### Streaming read from a file
+#### 流式读取文件（Streaming read from a file）
 
 TODO
 
-#### Reading from a directory
+#### 从目录中读取（Reading from a directory）
 
 fn read_entries(dir: Descriptor) -> Result<(), Errno> {
     // TODO: Implement this example.
@@ -125,41 +106,34 @@ fn read_entries(dir: Descriptor) -> Result<(), Errno> {
 
 [etc.
 
-### Detailed design discussion
+### 详细设计讨论（Detailed design discussion）
 
-#### Should WASI filesystem be case-sensitive, case-insensitive, or platform-dependent?
+#### WASI filesystem应该大小写敏感、大小写不敏感还是依赖于平台? （Should WASI filesystem be case-sensitive, case-insensitive, or platform-dependent?）
 
-Even just among popular platforms, there are case-sensitive and
-case-insensitive filesystems in wide use.
+即使在流行平台中，也有广泛使用大小写敏感和大小写不敏感的文件系统。
 
-It would be nice to have an API which presented consistent behavior across
-platforms, so that applications don't have to worry about subtle differences,
-and subtle bugs due to those differences.
+如果有一个API可以在各个平台上保持一致的行为将会非常好，这样应用程序就不必担心细微的差异，以及由于这些差异而产生的细微错误。
 
-However, implementing case sensitivity on a case-insensitive filesystem, or
-case-insensitivity on a case-sensitive filesystem, are both tricky to do.
+然而，要在大小写不敏感的文件系统上实现大小写敏感，或者在大小写敏感的文件系统上实现不大小写不敏感，都是很棘手的。
 
-One issue is that case insensitivity depends on a Unicode version, so the
-details can differ between different case-insensitive platforms. Another
-issue is tha WASI filesystem in general can't assume it has exclusive access
-to the filesystem, so approaches that involve checking for files with names
-that differ only by case can race with other processes creating new files.
+一个问题是，大小写不敏感依赖于Unicode版本，因此不同大小写不敏感的平台之间的细节可能会有所不同。
+另一个问题是，WASI filesystem通常不能假设它对文件系统具有独占访问权限，所以涉及到检查只有大小写不同的文件名的方法，可能会与其他创建新文件进程产生冲突。
 
-### Considered alternatives
+### 考虑替代方案（Considered alternatives）
 
-#### Fully deterministic filesystem
+#### 完全确定性的文件系统（Fully deterministic filesystem）
 
-The main tradeoff with full determinism is that it makes it difficult to access existing filesystems that the Wasm runtime doesn't have full control over. This proposal is aiming to address use cases where users have existing filesystems they want to access.
+完全确定性的主要权衡在于，它使得Wasm运行时无法完全控制的现有文件系统的存续变得困难。这个提案旨在解决用户希望访问现有文件系统的用例。
 
-### Stakeholder Interest & Feedback
+### 项目相关方利益 & 反馈（Stakeholder Interest & Feedback）
 
-TODO before entering Phase 3.
+进入第3阶段之前的TODO。
 
-Preview1 has a similar filesystem API, and it's widely exposed in toolchains.
+Preview1有一个类似的文件系统API，它在工具链中广泛公开。
 
-### References & acknowledgements
+### 参考文献 & 致谢（References & acknowledgements）
 
-Many thanks for valuable feedback and advice from:
+非常感谢以下人员提供的宝贵反馈和建议：
 
 - [Person 1]
 - [Person 2]
