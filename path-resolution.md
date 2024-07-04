@@ -1,86 +1,60 @@
-# WASI filesystem path resolution
+# WASI文件系统路径解析（WASI filesystem path resolution）
 
-wasi-filesystem uses a filesystem path sandboxing scheme modeled after the
-system used in [CloudABI], which is also similar to the system used in
-[Capsicum].
+wasi-filesystem使用文件系统路径沙盒方案，改方案模仿[CloudABI]中使用的系统，也类似于[Capsicum]中使用的系统。
 
-On Linux, it corresponds to the `RESOLVE_BENEATH` behavior in
-[Linux's `openat2`]. In FreeBSD, it corresponds to the `O_RESOLVE_BENEATH`
-behavior in [FreeBSD's `open`]. However, path resolution can also be
-implemented manually using `openat` and `readlinkat` or similar primitives.
+在Linux上，它对应于[Linux's `openat2`]中的`RESOLVE_BENEATH`行为。
+在FreeBSD上，它对应于[FreeBSD's `open`]中的`O_RESOLVE_BENEATH`行为。
+然而，路径解析也可以使用`openat`和`readlinkat`或类似原语手动实现。
 
-## Sandboxing overview
+## 沙盒概述（Sandboxing overview）
 
-All functions in wasi-filesystem which operate on filesystem paths take
-a pair of values: a base directory handle, and a relative path. Absolute
-paths are not permitted, and there is no global namespace. All path
-accesses are relative to a base directory handle.
+wasi-filesystem中所有 操作文件系统路径的函数都接受一对值：基目录句柄和相对路径。
+不允许绝对路径，也没有全局命名空间。
+所有路径访问都相对于基目录句柄。
 
-Path resolution is constrained to occur within the sub-filesystem referenced
-by the base handle. Information about the filesystem outside of the base
-directory handles is not visible. In particular, it's not permitted to use
-paths that temporarily step outside the sandbox with something like
-"../../../stuff/here", even if the final resolved path is back inside the
-sandbox, because that would leak information about the existence of
-directories outside the sandbox.
+路径解析被限制在基础句柄引用的子文件系统内进行。
+基目录句柄外的文件系统信息不可见。
+特别是，不允许使用临时超出沙盒范围的路径，例如“../../../stuff/here”，即使最终解析的路径回到了沙盒内，
+因为这会泄漏沙盒外部目录的实体信息。
 
-Importantly, the sandboxing is designed to be implementable even in the presence
-of outside processes accessing the same filesystem, including renaming,
-unlinking, and creating new files and directories.
+重要的是，沙盒设计为即使在外部进程访问同一文件系统的情况下也可实现，
+包括重命名(renaming)、取消链接(unlinking)和创建新文件和目录。
 
-## Symlinks
+## 符号链接（Symlinks）
 
-Creating a symlink with an absolute path string fails with a "not permitted"
-error.
+使用绝对路径字符串创建符号链接会导致“not permitted”(不允许)的错误。
 
-Other than that, symlinks may be created with any string, provided the
-underlying filesystem implementation supports it.
+除此之外，只要底层文件系统实现支持，就可以使用任何字符串创建符号链接。
 
-Sandboxing for symlink strings is performed at the time of an access, when a
-path is being resolved, and not at the time that the symlink is created or
-moved. This ensures that the sandbox is respected even if there are symlinks
-created or renamed by other entities with access to the filesystem.
+符号链接字符串的沙盒化是在访问时执行的，也就是在路径被解析的时候，而不是在创建或移动符号连接时。
+这确保了即使有其他实体访问文件系统并创建或重命名符号链接，沙盒化也被遵守。
 
-## Host Implementation
+## 宿主实现（Host Implementation）
 
-### Implementing path resolution manually
+### 手动实现路径解析（Implementing path resolution manually）
 
-Plain `openat` doesn't perform any sandboxing; it will readily open paths
-containing ".." or starting with "/", or symlinks to paths containing ".."
-or starting with "/". It has an `O_NOFOLLOW` flag, however this flag only
-applies to the last component of the path (eg. the "c" in "a/b/c"). So
-the strategy for using `openat` to implement sandboxing is to split paths
-into components (eg. "a", "b", "c") and open them one component at a time,
-so that each component can be opened with `O_NOFOLLOW`.
+普通的`openat`不执行任何沙盒化；它会迅速的打开包含“..”或以“/”开头的路径，或包含“..”或以“/”开头的符号连接。
+它有`O_NOFOLLOW`标志，然而此标志仅适用于路径最后的构件（例如，“a/b/c”中的“c”）。
+因此实现`openat`沙盒化的策略是将路径拆分为构件（例如“a”、“b”、“c”），并且每次打开一个构件，以便每个构件都可以用`O_NOFOLLOW`打开。
 
-If the `openat` call fails, and the OS error code indicates that it *was*
-a symlink (eg. `ELOOP`), then call `readlinkat` to read the link contents,
-split the contents into components, and prepend these new components to the
-component list. If it starts with an absolute path, that's an attempt to
-jump outside the sandbox, so path resolution should fail with an
-"access denied" error message.
+如果`openat`调用失败，并且操作系统错误码(OS error code)指示其*为*符号连接（例如`ELOOP`），
+则调用`readlinkat`读取链接内容，将内容拆分为构件，并将新构件添加到构件列表前。
+如果它以绝对路径开头，则试图跳出沙盒，所以路径解析应失败并显示“access denied”(访问被拒绝)的错误消息。
 
-If a path component is "..", instead of opening it, pop an item off of the
-component list. If the list was empty, that represents an attempt to use
-".." to step outside the sandbox, so path resolution should fail with an
-"access denied" error message.
+如果路径构件为“..”，则不会打开它，而是从构件列表中弹出(pop)一项。
+如果该列表为空，则表示试图使用“..”移出沙盒，所以路径解析应失败并显示“access denied”(访问被拒绝)的错误消息。
 
-### Implementation notes
+### 实现说明（Implementation notes）
 
-On Linux, `openat2` with `RESOLVE_BENEATH` may be used as an optimization to
-implement many system calls other than just "open" by utilizing Linux's
-`O_PATH` and "/proc/self/fd" features.
+在Linux上，可以使用带有`RESOLVE_BENEATH`的`openat2`作为优化，
+通过利用Linux的`O_PATH`和"/proc/self/fd"特性，来实现除“open”外的许多系统调用。
 
-On Windows, the [`NtCreateFile`] function can accept a directory handle and
-can behave like an `openat` function, which can be used in the
-[manual algorithm](implementing-path-resolution-manually).
+在Windows上，[`NtCreateFile`]函数可以接受一个目录句柄且行为类似于`openat`函数，这可在[manual algorithm](implementing-path-resolution-manually)中使用。
 
-The Rust library [cap-std] implements WASI's filesystem sandboxing semantics,
-but is otherwise independent of WASI or Wasm, so it can be reused in other
-settings. It uses `openat2` and `NtCreateFile` and other optimizations.
+Rust库[cap-std]实现了WASI的文件系统(filesystem)沙盒化语义，但除此之外独立于WASI或Wasm，因此可以在其他环境中复用。
+它使用了`openat2`和`NtCreateFile`以及其他优化。
 
-cloudabi-utils has an [implementation of the manual technique in C], though
-that repository is no longer maintained.
+cloudabi-utils拥有[implementation of the manual technique in C]，尽管该库已不再维护。
 
 [implementation of the manual technique in C]: https://github.com/NuxiNL/cloudabi-utils/blob/master/src/libemulator/posix.c#L1205
 [cap-std]: https://github.com/bytecodealliance/cap-std
