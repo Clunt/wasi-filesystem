@@ -327,315 +327,285 @@ interface types {
 
         /// 获取描述符的动态类型。
         ///
-        /// Note: This returns the same value as the `type` field of the `fd-stat`
-        /// returned by `stat`, `stat-at` and similar.
+        /// 注意：此返回与`stat`、`stat-at`等返回的`fd-stat`d的 `type`字段的值相同。
         ///
-        /// Note: This returns similar flags to the `st_mode & S_IFMT` value provided
-        /// by `fstat` in POSIX.
+        /// 注意：此返回的标志类似于POSIX中`fstat`提供的`st_mode & S_IFMT`值。
         ///
-        /// Note: This returns the value that was the `fs_filetype` value returned
-        /// from `fdstat_get` in earlier versions of WASI.
+        /// 注意：此返回的值是早期 WASI 版本中`fdstat_get`返回的`fs_filetype`值。
         @since(version = 0.2.0)
         get-type: func() -> result<descriptor-type, error-code>;
 
-        /// Adjust the size of an open file. If this increases the file's size, the
-        /// extra bytes are filled with zeros.
+        /// 调整已打开文件的大小。如果增加文件的大小，额外的字节将被填充为零。
         ///
-        /// Note: This was called `fd_filestat_set_size` in earlier versions of WASI.
+        /// 注意：在早期版本的 WASI 中，这被称为 `fd_filestat_set_size`。
         @since(version = 0.2.0)
         set-size: func(size: filesize) -> result<_, error-code>;
 
-        /// Adjust the timestamps of an open file or directory.
+        /// 调整已打开文件或目录的时间戳。
         ///
-        /// Note: This is similar to `futimens` in POSIX.
+        /// 注意：其类似于POSIX中的`futimens`。
         ///
-        /// Note: This was called `fd_filestat_set_times` in earlier versions of WASI.
+        /// 注意：在早期版本的 WASI 中，这被称为 `fd_filestat_set_times`。
         @since(version = 0.2.0)
         set-times: func(
-            /// The desired values of the data access timestamp.
+            /// 所需的数据访问时间戳的值。
             data-access-timestamp: new-timestamp,
-            /// The desired values of the data modification timestamp.
+            /// 所需的数据修改时间戳的值。
             data-modification-timestamp: new-timestamp,
         ) -> result<_, error-code>;
 
-        /// Read from a descriptor, without using and updating the descriptor's offset.
+        /// 在不使用和更新描述符的偏移量的情况下，从描述符中读取数据。
         ///
-        /// This function returns a list of bytes containing the data that was
-        /// read, along with a bool which, when true, indicates that the end of the
-        /// file was reached. The returned list will contain up to `length` bytes; it
-        /// may return fewer than requested, if the end of the file is reached or
-        /// if the I/O operation is interrupted.
+        /// 该函数返回一个字节列表，包含已读取的数据，
+        /// 以及一个布尔值，当布尔值为true，表示已达到文件末尾。
+        /// 返回的列表将包含最多length字节；
+        /// 如果达到文件末尾或者 I/O 操作被中断，可能会返回少于请求的字节数。
         ///
-        /// In the future, this may change to return a `stream<u8, error-code>`.
+        /// 将来，可能会更改为返回`stream<u8, error-code>`。
         ///
-        /// Note: This is similar to `pread` in POSIX.
+        /// 注意：其类似于POSIX中的`pread`。
         @since(version = 0.2.0)
         read: func(
-            /// The maximum number of bytes to read.
+            /// 读取的最大字节数
             length: filesize,
-            /// The offset within the file at which to read.
+            /// 读取的文件内偏移量。
             offset: filesize,
         ) -> result<tuple<list<u8>, bool>, error-code>;
 
-        /// Write to a descriptor, without using and updating the descriptor's offset.
+        /// 在不使用和更新描述符的偏移量的情况下，向描述符写入数据。
         ///
-        /// It is valid to write past the end of a file; the file is extended to the
-        /// extent of the write, with bytes between the previous end and the start of
-        /// the write set to zero.
+        /// 可以向文件末尾写入数据；
+        /// 文件会被扩展到写入的范围，并且在先前末尾和写入开始之间的字节会被设置为零。
         ///
-        /// In the future, this may change to take a `stream<u8, error-code>`.
+        /// 将来，可能会更改为返回`stream<u8, error-code>`。
         ///
-        /// Note: This is similar to `pwrite` in POSIX.
+        /// 注意：其类似于POSIX中的`pwrite`。
         @since(version = 0.2.0)
         write: func(
-            /// Data to write
+            /// 写入的数据
             buffer: list<u8>,
-            /// The offset within the file at which to write.
+            /// 写入的文件内偏移量。
             offset: filesize,
         ) -> result<filesize, error-code>;
 
-        /// Read directory entries from a directory.
+        /// 从目录中读取目录条目。
         ///
-        /// On filesystems where directories contain entries referring to themselves
-        /// and their parents, often named `.` and `..` respectively, these entries
-        /// are omitted.
+        /// 在文件系统中，如果目录包含指向自身和其父目录的条目，
+        /// 通常分别命名为`.`和`..`，这些条目将被省略。
         ///
-        /// This always returns a new stream which starts at the beginning of the
-        /// directory. Multiple streams may be active on the same directory, and they
-        /// do not interfere with each other.
+        /// 这总是返回一个新的流，该流从目录的开头开始。同一目录上可以有多个活动的流，它们不会相互干扰。
         @since(version = 0.2.0)
         read-directory: func() -> result<directory-entry-stream, error-code>;
 
-        /// Synchronize the data and metadata of a file to disk.
+        /// 同步文件的数据和元数据至磁盘。
         ///
-        /// This function succeeds with no effect if the file descriptor is not
-        /// opened for writing.
+        /// 如果文件描述符未打开写入，则此函数会成功但没有效果。
         ///
-        /// Note: This is similar to `fsync` in POSIX.
+        /// 注意：其类似于POSIX中的`fsync`。
         @since(version = 0.2.0)
         sync: func() -> result<_, error-code>;
 
-        /// Create a directory.
+        /// 创建目录。
         ///
-        /// Note: This is similar to `mkdirat` in POSIX.
+        /// 注意：其类似于POSIX中的`mkdirat`。
         @since(version = 0.2.0)
         create-directory-at: func(
-            /// The relative path at which to create the directory.
+            /// 创建目录的相对路径。
             path: string,
         ) -> result<_, error-code>;
 
-        /// Return the attributes of an open file or directory.
+        /// 返回已打开文件或目录的属性。
         ///
-        /// Note: This is similar to `fstat` in POSIX, except that it does not return
-        /// device and inode information. For testing whether two descriptors refer to
-        /// the same underlying filesystem object, use `is-same-object`. To obtain
-        /// additional data that can be used do determine whether a file has been
-        /// modified, use `metadata-hash`.
+        /// 注意：其类似于POSIX中的`fstat`，除了它不返回设备和索引节点的信息。
+        /// 要测试两个文件描述符是否指向同一底层文件系统对象，使用`is-same-object`。
+        /// 要获取其他可以用来确定文件是否已被修改的数据，使用`metadata-hash`。
         ///
-        /// Note: This was called `fd_filestat_get` in earlier versions of WASI.
+        /// 注意：在早期的WASI版本中被称为`fd_filestat_get`。
         @since(version = 0.2.0)
         stat: func() -> result<descriptor-stat, error-code>;
 
-        /// Return the attributes of a file or directory.
+        /// 返回文件或目录的属性。
         ///
-        /// Note: This is similar to `fstatat` in POSIX, except that it does not
-        /// return device and inode information. See the `stat` description for a
-        /// discussion of alternatives.
+        /// 注意：其类似于POSIX中的`fstatat`，除了它不返回设备和索引节点的信息。
+        /// 请参阅`stat`描述中关于替代方案的讨论。
         ///
-        /// Note: This was called `path_filestat_get` in earlier versions of WASI.
+        /// 注意：在早期的WASI版本中被称为`path_filestat_get`。
         @since(version = 0.2.0)
         stat-at: func(
-            /// Flags determining the method of how the path is resolved.
+            /// 确定路径解析方法的标志。
             path-flags: path-flags,
-            /// The relative path of the file or directory to inspect.
+            /// 要检查的文件或目录的相对路径。
             path: string,
         ) -> result<descriptor-stat, error-code>;
 
-        /// Adjust the timestamps of a file or directory.
+        /// 调整文件或目录的时间戳。
         ///
-        /// Note: This is similar to `utimensat` in POSIX.
+        /// 注意：其类似于POSIX中的`utimensat`。
         ///
-        /// Note: This was called `path_filestat_set_times` in earlier versions of
-        /// WASI.
+        /// 注意：在早期的WASI版本中被称为`path_filestat_set_times`。
         @since(version = 0.2.0)
         set-times-at: func(
-            /// Flags determining the method of how the path is resolved.
+            /// 确定路径解析方法的标志。
             path-flags: path-flags,
-            /// The relative path of the file or directory to operate on.
+            /// 要操作的文件或目录的相对路径。
             path: string,
-            /// The desired values of the data access timestamp.
+            /// 所需的数据访问时间戳的值。
             data-access-timestamp: new-timestamp,
-            /// The desired values of the data modification timestamp.
+            /// 所需的数据修改时间戳的值。
             data-modification-timestamp: new-timestamp,
         ) -> result<_, error-code>;
 
-        /// Create a hard link.
+        /// 创建硬链接(hard link)。
         ///
-        /// Note: This is similar to `linkat` in POSIX.
+        /// 注意：其类似于POSIX中的`linkat`。
         @since(version = 0.2.0)
         link-at: func(
-            /// Flags determining the method of how the path is resolved.
+            /// 确定路径解析方法的标志。
             old-path-flags: path-flags,
-            /// The relative source path from which to link.
+            /// 要链接的相对源路径。
             old-path: string,
-            /// The base directory for `new-path`.
+            /// `new-path`的基目录。
             new-descriptor: borrow<descriptor>,
-            /// The relative destination path at which to create the hard link.
+            /// 要创建硬链接的相对目标路径。
             new-path: string,
         ) -> result<_, error-code>;
 
-        /// Open a file or directory.
+        /// 打开文件或目录。
         ///
-        /// The returned descriptor is not guaranteed to be the lowest-numbered
-        /// descriptor not currently open/ it is randomized to prevent applications
-        /// from depending on making assumptions about indexes, since this is
-        /// error-prone in multi-threaded contexts. The returned descriptor is
-        /// guaranteed to be less than 2**31.
+        /// 返回的描述符不能保证是当前未打开的最低编号(lowest-numbered)描述符，
+        /// 它是随机的以防止应用程序依赖于对索引的假设，因为在多线程环境中这样做是容易出错的。
+        /// 返回的描述符保证小于2**31。
         ///
-        /// If `flags` contains `descriptor-flags::mutate-directory`, and the base
-        /// descriptor doesn't have `descriptor-flags::mutate-directory` set,
-        /// `open-at` fails with `error-code::read-only`.
+        /// 如果`flags`包含`descriptor-flags::mutate-directory`，
+        /// 并且基础描述符没有设置`descriptor-flags::mutate-directory`，
+        /// 则`open-at`将失败，并返回`error-code::read-only`。
+
         ///
-        /// If `flags` contains `write` or `mutate-directory`, or `open-flags`
-        /// contains `truncate` or `create`, and the base descriptor doesn't have
-        /// `descriptor-flags::mutate-directory` set, `open-at` fails with
-        /// `error-code::read-only`.
+        /// 如果`flags`包含`write`或`mutate-directory`，或者`open-flags`包含`truncate`或`create`，
+        /// 并且基础描述符没有设置 `descriptor-flags::mutate-directory`，
+        /// 则 `open-at`将失败，并返回`error-code::read-only`。
         ///
-        /// Note: This is similar to `openat` in POSIX.
+        /// 注意：其类似于POSIX中的`openat`。
         @since(version = 0.2.0)
         open-at: func(
-            /// Flags determining the method of how the path is resolved.
+            /// 确定路径解析方法的标志。
             path-flags: path-flags,
-            /// The relative path of the object to open.
+            /// 要打开的对象的相对路径。
             path: string,
-            /// The method by which to open the file.
+            /// 打开文件的方法。
             open-flags: open-flags,
-            /// Flags to use for the resulting descriptor.
+            /// 用于结果描述符的标志。
             %flags: descriptor-flags,
         ) -> result<descriptor, error-code>;
 
-        /// Read the contents of a symbolic link.
+        /// 读取符号连接的内容。
         ///
-        /// If the contents contain an absolute or rooted path in the underlying
-        /// filesystem, this function fails with `error-code::not-permitted`.
+        /// 如果内容包含底层文件系统中的绝对路径或根路径，
+        /// 此函数将失败，并返回 `error-code::not-permitted`。
         ///
-        /// Note: This is similar to `readlinkat` in POSIX.
+        /// 注意：其类似于POSIX中的`readlinkat`。
         @since(version = 0.2.0)
         readlink-at: func(
-            /// The relative path of the symbolic link from which to read.
+            /// 要读取的符号链接的相对路径。
             path: string,
         ) -> result<string, error-code>;
 
-        /// Remove a directory.
+        /// 删除目录。
         ///
-        /// Return `error-code::not-empty` if the directory is not empty.
+        /// 如果目录非空，返回`error-code::not-empty`。
         ///
-        /// Note: This is similar to `unlinkat(fd, path, AT_REMOVEDIR)` in POSIX.
+        /// 注意：其类似于POSIX中的`unlinkat(fd, path, AT_REMOVEDIR)`。
         @since(version = 0.2.0)
         remove-directory-at: func(
-            /// The relative path to a directory to remove.
+            /// 要删除目录的相对路径。
             path: string,
         ) -> result<_, error-code>;
 
-        /// Rename a filesystem object.
+        /// 读取文件系统对象。
         ///
-        /// Note: This is similar to `renameat` in POSIX.
+        /// 注意：其类似于POSIX中的`renameat`。
         @since(version = 0.2.0)
         rename-at: func(
-            /// The relative source path of the file or directory to rename.
+            /// 要重命名的文件或目录的相对源路径。
             old-path: string,
-            /// The base directory for `new-path`.
+            /// `new-path`的基目录。
             new-descriptor: borrow<descriptor>,
-            /// The relative destination path to which to rename the file or directory.
+            /// 要重命名的文件或目录的相对目标路径。
             new-path: string,
         ) -> result<_, error-code>;
 
-        /// Create a symbolic link (also known as a "symlink").
+        /// 创建符号链接（symbolic link，也称为“symlink”）
         ///
-        /// If `old-path` starts with `/`, the function fails with
-        /// `error-code::not-permitted`.
+        /// 如果`old-path`以`/`开头，此函数将失败并返回`error-code::not-permitted`。
         ///
-        /// Note: This is similar to `symlinkat` in POSIX.
+        /// 注意：其类似于POSIX中的`symlinkat`。
         @since(version = 0.2.0)
         symlink-at: func(
-            /// The contents of the symbolic link.
+            /// 符号连接的内容。
             old-path: string,
-            /// The relative destination path at which to create the symbolic link.
+            /// 要创建符号链接的相对目标路径。
             new-path: string,
         ) -> result<_, error-code>;
 
-        /// Unlink a filesystem object that is not a directory.
+        /// 取消链接为不是目录的文件系统对象。
         ///
-        /// Return `error-code::is-directory` if the path refers to a directory.
-        /// Note: This is similar to `unlinkat(fd, path, 0)` in POSIX.
+        /// 如果路径指向一个目录，则返回`error-code::is-directory`。
+        /// 注意：其类似于POSIX中的`unlinkat(fd, path, 0)`。
         @since(version = 0.2.0)
         unlink-file-at: func(
-            /// The relative path to a file to unlink.
+            /// 要取消链接的文件的相对路径。
             path: string,
         ) -> result<_, error-code>;
 
-        /// Test whether two descriptors refer to the same filesystem object.
+        /// 测试两个描述符是否引用同一个文件系统对象。
         ///
-        /// In POSIX, this corresponds to testing whether the two descriptors have the
-        /// same device (`st_dev`) and inode (`st_ino` or `d_ino`) numbers.
-        /// wasi-filesystem does not expose device and inode numbers, so this function
-        /// may be used instead.
+        /// 在POSIX中，这相当于测试两个描述符是否具有相同的设备号（`st_dev`）和索引节点号（`st_ino`或`d_ino`）。
+        /// wasi-filesystem 不公开设备号和索引节点号，因此可以使用这个函数来代替。
         @since(version = 0.2.0)
         is-same-object: func(other: borrow<descriptor>) -> bool;
 
-        /// Return a hash of the metadata associated with a filesystem object referred
-        /// to by a descriptor.
+        /// 返回由描述符引用的文件系统对象相关元数据的哈希值。
         ///
-        /// This returns a hash of the last-modification timestamp and file size, and
-        /// may also include the inode number, device number, birth timestamp, and
-        /// other metadata fields that may change when the file is modified or
-        /// replaced. It may also include a secret value chosen by the
-        /// implementation and not otherwise exposed.
+        /// 这返回一个由最后修改时间戳和文件大小组成的哈希值，
+        /// 还可能包括索引节点号、设备号、创建时间戳等在文件修改或替换时可能发生变化的元数据字段。
+        /// 它还可能包含由实现选择的并且不会其他方式暴露的秘密值。
         ///
-        /// Implementations are encourated to provide the following properties:
+        /// 实现应该提供以下属性：
         ///
-        ///  - If the file is not modified or replaced, the computed hash value should
-        ///    usually not change.
-        ///  - If the object is modified or replaced, the computed hash value should
-        ///    usually change.
-        ///  - The inputs to the hash should not be easily computable from the
-        ///    computed hash.
+        /// - 如果文件未被修改或替换，计算得到的哈希值通常不应改变。
+        /// - 如果对象被修改或替换，计算得到的哈希值通常应该改变。
+        /// - 哈希的输入不应该从计算得到的哈希值轻易计算出来。
         ///
-        /// However, none of these is required.
+        /// 然而，这些都不是必须的。
         @since(version = 0.2.0)
         metadata-hash: func() -> result<metadata-hash-value, error-code>;
 
-        /// Return a hash of the metadata associated with a filesystem object referred
-        /// to by a directory descriptor and a relative path.
+        /// 返回由目录描述符和相对路径引用的文件系统对象相关元数据的哈希值。
         ///
-        /// This performs the same hash computation as `metadata-hash`.
+        /// 这执行与`metadata-hash`相同的元数据哈希计算。
         @since(version = 0.2.0)
         metadata-hash-at: func(
-            /// Flags determining the method of how the path is resolved.
+            /// 确定路径解析方法的标志。
             path-flags: path-flags,
-            /// The relative path of the file or directory to inspect.
+            /// 要检查的文件或目录的相对路径。
             path: string,
         ) -> result<metadata-hash-value, error-code>;
     }
 
-    /// A stream of directory entries.
+    /// 目录项的流。
     @since(version = 0.2.0)
     resource directory-entry-stream {
-        /// Read a single directory entry from a `directory-entry-stream`.
+        /// 从`directory-entry-stream`中读取单个目录项。
         @since(version = 0.2.0)
         read-directory-entry: func() -> result<option<directory-entry>, error-code>;
     }
 
-    /// Attempts to extract a filesystem-related `error-code` from the stream
-    /// `error` provided.
+    /// 尝试从提供的流`error`中提取与文件系统相关的`error-code`。
     ///
-    /// Stream operations which return `stream-error::last-operation-failed`
-    /// have a payload with more information about the operation that failed.
-    /// This payload can be passed through to this function to see if there's
-    /// filesystem-related information about the error to return.
+    /// 流操作返回`stream-error::last-operation-failed`时，其载荷包含有关失败操作的更多信息。
+    /// 可以将此载荷传递给此函数，以查看是否有关于文件系统的错误信息可返回。
     ///
-    /// Note that this function is fallible because not all stream-related
-    /// errors are filesystem-related errors.
+    /// 请注意，此函数可能会失败，因为并非所有与流相关的错误都是与文件系统相关的错误。
     @since(version = 0.2.0)
     filesystem-error-code: func(err: borrow<error>) -> option<error-code>;
 }
